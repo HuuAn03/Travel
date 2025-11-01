@@ -3,7 +3,46 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">
+    app:startDestination="@id/splashFragment">
+
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.splash.SplashFragment"
+        android:label="fragment_splash"
+        tools:layout="@layout/fragment_splash">
+        <action
+            android:id="@+id/action_splashFragment_to_signInFragment"
+            app:destination="@id/signInFragment"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/signInFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.login.SignInFragment"
+        android:label="fragment_sign_in"
+        tools:layout="@layout/fragment_sign_in">
+        <action
+            android:id="@+id/action_signInFragment_to_signUpFragment"
+            app:destination="@id/signUpFragment" />
+        <action
+            android:id="@+id/action_signInFragment_to_navigation_home"
+            app:destination="@id/navigation_home"
+            app:popUpTo="@id/signInFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/signUpFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.register.SignUpFragment"
+        android:label="fragment_sign_up"
+        tools:layout="@layout/fragment_sign_up">
+        <action
+            android:id="@+id/action_signUpFragment_to_signInFragment"
+            app:destination="@id/signInFragment"
+            app:popUpTo="@id/signInFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_home"
@@ -12,20 +51,33 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
+        android:id="@+id/navigation_my_trip"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.mytrip.MyTripFragment"
+        android:label="My Trip"
+        tools:layout="@layout/fragment_my_trip" />
+  
+     <fragment
         android:id="@+id/navigation_discover"
         android:name="fpt.edu.vn.assigment_travelapp.ui.discover.DiscoverFragment"
         android:label="@string/title_discover"
         tools:layout="@layout/fragment_discover" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="fpt.edu.vn.assigment_travelapp.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:id="@+id/navigation_explore"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.explore.ExploreFragment"
+        android:label="Explore"
+        tools:layout="@layout/fragment_explore" />
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="fpt.edu.vn.assigment_travelapp.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:id="@+id/navigation_favorite"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.favorite.FavoriteFragment"
+        android:label="Favorite"
+        tools:layout="@layout/fragment_favorite" />
+
+    <fragment
+        android:id="@+id/navigation_profile"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.profile.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile" />
+
 </navigation>
