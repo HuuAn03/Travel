@@ -19,6 +19,11 @@ public class UserRepository implements IUserRepository {
         mDatabase = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference();
     }
 
+    public Task<DataSnapshot> getUserByEmail(String email) {
+        String dbKey = email.replace(".", ",");
+        return mDatabase.child("users").child(dbKey).get();
+    }
+
     @Override
     public void getUser(String userId, OnGetUserCompleteListener listener) {
         mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {

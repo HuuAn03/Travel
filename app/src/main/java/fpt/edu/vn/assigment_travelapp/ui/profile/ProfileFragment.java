@@ -16,9 +16,6 @@ import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -38,29 +35,49 @@ public class ProfileFragment extends Fragment {
 
     private static final String TAG = "ProfileFragment"; // <-- Tag để debug
     private FragmentProfileBinding binding;
-    private FirebaseAuth mAuth;
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener authStateListener; // <-- Listener cho Auth
+
+    private GoogleSignInClient mGoogleSignInClient;
+    private NavController navController;
+
+    private DatabaseReference mDatabase;
+    private ValueEventListener databaseListener; // <-- Listener cho Database
+    private DatabaseReference currentUserRef;
+
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container, Bundle savedInstanceState) {
+
+        Log.d(TAG, "onCreateView: Fragment đang được tạo.");
+
         binding = FragmentProfileBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
+
         mAuth = FirebaseAuth.getInstance();
-        return binding.getRoot();
+        mDatabase = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("users");
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        mGoogleSignInClient = GoogleSignIn.getClient(requireActivity(), gso);
+
+        return root;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            binding.tvName.setText(currentUser.getDisplayName());
-            binding.tvEmail.setText(currentUser.getEmail());
-            if (currentUser.getPhotoUrl() != null) {
-                Glide.with(this).load(currentUser.getPhotoUrl()).into(binding.ivProfile);
-            }
-        }
-    }
+        navController = Navigation.findNavController(view);
 
+        // Nút logout
+        binding.btnProfileLogout.setOnClickListener(v -> logout());
+
+        // Tạo AuthStateListener
+        setupAuthStateListener();
+    }
 
     private void setupAuthStateListener() {
         Log.d(TAG, "Đang thiết lập AuthStateListener...");
@@ -124,12 +141,12 @@ public class ProfileFragment extends Fragment {
                 if (binding != null) {
 
                     // === CÁC DÒNG ĐÃ SỬA LỖI ===
-                    binding.tvProfileName.setText(user.getFirstName() + " " + user.getLastName());
+                    binding.tvProfileName.setText(user.getName());
                     binding.tvProfileEmail.setText(user.getEmail());
                     // =========================
 
                     Glide.with(ProfileFragment.this)
-                            .load(user.getImageUrl())
+                            .load(user.getPhotoUrl())
                             .placeholder(R.drawable.ic_profile)
                             .circleCrop()
                             .into(binding.ivProfileImage);
