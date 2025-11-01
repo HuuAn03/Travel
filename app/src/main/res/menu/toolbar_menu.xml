@@ -3,9 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_notification"
+        android:title="Notification"
+        android:icon="@drawable/ic_notification_bell"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/action_logout"
         android:title="Logout"
         android:icon="@drawable/ic_logout"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom"
+        android:visible="false" />
 
 </menu>

@@ -16,26 +16,29 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
-import at.favre.lib.crypto.bcrypt.BCrypt;
 import fpt.edu.vn.assigment_travelapp.R;
 import fpt.edu.vn.assigment_travelapp.data.model.User;
+import fpt.edu.vn.assigment_travelapp.data.repository.IUserRepository;
+import fpt.edu.vn.assigment_travelapp.data.repository.UserRepository;
 import fpt.edu.vn.assigment_travelapp.databinding.FragmentSignUpBinding;
 
 public class SignUpFragment extends Fragment {
 
     private FragmentSignUpBinding binding;
-    private DatabaseReference mDatabase;
+    private IUserRepository userRepository;
     private NavController navController;
+    private FirebaseAuth mAuth;
     private static final String TAG = "SignUpFragment";
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = FragmentSignUpBinding.inflate(inflater, container, false);
-        mDatabase = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference();
+        userRepository = new UserRepository();
+        mAuth = FirebaseAuth.getInstance(); // Initialize FirebaseAuth
         return binding.getRoot();
     }
 
@@ -44,71 +47,78 @@ public class SignUpFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         navController = Navigation.findNavController(view);
 
-        binding.btnSignUp.setOnClickListener(v -> {
-            String firstName = binding.etFirstName.getText().toString().trim();
-            String lastName = binding.etLastName.getText().toString().trim();
-            String email = binding.etEmail.getText().toString().trim();
-            String password = binding.etPassword.getText().toString().trim();
-            String confirmPassword = binding.etConfirmPassword.getText().toString().trim();
-
-            if (TextUtils.isEmpty(firstName)) {
-                binding.etFirstName.setError("First name is required.");
-                return;
-            }
-
-            if (TextUtils.isEmpty(lastName)) {
-                binding.etLastName.setError("Last name is required.");
-                return;
-            }
-
-            if (TextUtils.isEmpty(email)) {
-                binding.etEmail.setError("Email is required.");
-                return;
-            }
-
-            if (TextUtils.isEmpty(password)) {
-                binding.etPassword.setError("Password is required.");
-                return;
-            }
-
-            if (password.length() < 6) {
-                binding.etPassword.setError("Password must be at least 6 characters.");
-                return;
-            }
-
-            if (!password.equals(confirmPassword)) {
-                binding.etConfirmPassword.setError("Passwords do not match.");
-                return;
-            }
-
-            // Hash the password before saving
-            String hashedPassword = BCrypt.withDefaults().hashToString(12, password.toCharArray());
-
-            // Create a new User object with the hashed password
-            User user = new User(firstName, lastName, email, hashedPassword);
-
-            // Save the user to the database
-            mDatabase.child("users").child(email.replace(".", ",")).setValue(user)
-                    .addOnCompleteListener(task -> {
-                        if (isAdded()) {
-                           if (task.isSuccessful()) {
-                                Log.d(TAG, "User registration successful.");
-                                Toast.makeText(requireContext(), "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
-                                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                    if (isAdded()) {
-                                        navController.navigate(R.id.action_signUpFragment_to_signInFragment);
-                                    }
-                                }, 2000); // 2 seconds delay
-                            } else {
-                                String errorMessage = "Registration failed: " + task.getException().getMessage();
-                                Log.e(TAG, "Registration failed", task.getException());
-                                Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
-        });
+        binding.btnSignUp.setOnClickListener(v -> registerUser());
 
         binding.tvLogin.setOnClickListener(v -> navController.navigate(R.id.action_signUpFragment_to_signInFragment));
+    }
+
+    private void registerUser() {
+        String firstName = binding.etFirstName.getText().toString().trim();
+        String lastName = binding.etLastName.getText().toString().trim();
+        String email = binding.etEmail.getText().toString().trim();
+        String password = binding.etPassword.getText().toString().trim();
+        String confirmPassword = binding.etConfirmPassword.getText().toString().trim();
+
+        // Validation checks
+        if (TextUtils.isEmpty(firstName)) {
+            binding.etFirstName.setError("First name is required.");
+            return;
+        }
+        if (TextUtils.isEmpty(lastName)) {
+            binding.etLastName.setError("Last name is required.");
+            return;
+        }
+        if (TextUtils.isEmpty(email)) {
+            binding.etEmail.setError("Email is required.");
+            return;
+        }
+        if (TextUtils.isEmpty(password)) {
+            binding.etPassword.setError("Password is required.");
+            return;
+        }
+        if (password.length() < 6) {
+            binding.etPassword.setError("Password must be at least 6 characters.");
+            return;
+        }
+        if (!password.equals(confirmPassword)) {
+            binding.etConfirmPassword.setError("Passwords do not match.");
+            return;
+        }
+
+        // Step 1: Create user with Firebase Auth
+        mAuth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener(requireActivity(), authTask -> {
+                if (authTask.isSuccessful()) {
+                    Log.d(TAG, "createUserWithEmail:success");
+                    FirebaseUser firebaseUser = mAuth.getCurrentUser();
+                    if (firebaseUser != null) {
+                        String uid = firebaseUser.getUid();
+                        String name = firstName + " " + lastName;
+                        User newUser = new User(name, email, ""); // photoUrl is empty
+
+                        // Step 2: Save user info to Realtime DB with UID as key
+                        userRepository.saveUser(uid, newUser).addOnCompleteListener(dbTask -> {
+                            if (isAdded()) {
+                                if (dbTask.isSuccessful()) {
+                                    Log.d(TAG, "User data saved to database.");
+                                    Toast.makeText(requireContext(), "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
+                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                        if (isAdded()) {
+                                            navController.navigate(R.id.action_signUpFragment_to_signInFragment);
+                                        }
+                                    }, 1000);
+                                } else {
+                                    Toast.makeText(requireContext(), "Failed to save user data.", Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    if (isAdded()) {
+                        Toast.makeText(requireContext(), "Authentication failed: " + authTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
     }
 
     @Override

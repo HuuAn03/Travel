@@ -106,8 +106,10 @@ public class SignInFragment extends Fragment {
 
         // Sign in with Google
         binding.btnGoogleSignIn.setOnClickListener(v -> {
-            Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-            signInLauncher.launch(signInIntent);
+            mGoogleSignInClient.signOut().addOnCompleteListener(requireActivity(), task -> {
+                Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+                signInLauncher.launch(signInIntent);
+            });
         });
 
         // Navigate to Sign Up
