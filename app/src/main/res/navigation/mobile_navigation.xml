@@ -55,6 +55,12 @@
         android:name="fpt.edu.vn.assigment_travelapp.ui.mytrip.MyTripFragment"
         android:label="My Trip"
         tools:layout="@layout/fragment_my_trip" />
+  
+     <fragment
+        android:id="@+id/navigation_discover"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.discover.DiscoverFragment"
+        android:label="@string/title_discover"
+        tools:layout="@layout/fragment_discover" />
 
     <fragment
         android:id="@+id/navigation_explore"

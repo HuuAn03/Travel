@@ -10,6 +10,11 @@
         android:id="@+id/navigation_my_trip"
         android:icon="@drawable/ic_my_trip"
         android:title="My Trip" />
+  
+    <item
+        android:id="@+id/navigation_discover"
+        android:icon="@drawable/ic_discover_black_24dp"
+        android:title="@string/title_discover" />
 
     <item
         android:id="@+id/navigation_explore"
