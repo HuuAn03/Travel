@@ -51,15 +51,27 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="fpt.edu.vn.assigment_travelapp.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:id="@+id/navigation_my_trip"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.mytrip.MyTripFragment"
+        android:label="My Trip"
+        tools:layout="@layout/fragment_my_trip" />
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="fpt.edu.vn.assigment_travelapp.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:id="@+id/navigation_explore"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.explore.ExploreFragment"
+        android:label="Explore"
+        tools:layout="@layout/fragment_explore" />
+
+    <fragment
+        android:id="@+id/navigation_favorite"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.favorite.FavoriteFragment"
+        android:label="Favorite"
+        tools:layout="@layout/fragment_favorite" />
+
+    <fragment
+        android:id="@+id/navigation_profile"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.profile.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile" />
 
 </navigation>

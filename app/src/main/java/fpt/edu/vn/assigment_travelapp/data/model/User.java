@@ -1,26 +1,38 @@
 package fpt.edu.vn.assigment_travelapp.data.model;
 
 public class User {
-    private String uid;
+    private String firstName;
+    private String lastName;
     private String email;
-    private String displayName;
+    private String password;
+    private String imageUrl;
 
     // Firebase needs a public no-argument constructor
     public User() {
     }
 
-    public User(String uid, String email, String displayName) {
-        this.uid = uid;
+    public User(String firstName, String lastName, String email, String password) {
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
-        this.displayName = displayName;
+        this.password = password;
+        this.imageUrl = ""; // Default to empty string
     }
 
-    public String getUid() {
-        return uid;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setUid(String uid) {
-        this.uid = uid;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getEmail() {
@@ -31,11 +43,19 @@ public class User {
         this.email = email;
     }
 
-    public String getDisplayName() {
-        return displayName;
+    public String getPassword() {
+        return password;
     }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

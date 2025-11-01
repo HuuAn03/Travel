@@ -9,6 +9,7 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
 import fpt.edu.vn.assigment_travelapp.data.model.User;
 import fpt.edu.vn.assigment_travelapp.data.repository.UserRepository;
 
@@ -29,6 +30,30 @@ public class SignInViewModel extends ViewModel {
         userRepository = new UserRepository();
     }
 
+    public void signInWithEmailAndPassword(String email, String password) {
+        userRepository.getUserByEmail(email).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                User user = task.getResult().getValue(User.class);
+                if (user != null) {
+                    BCrypt.Result result = BCrypt.verifyer().verify(password.toCharArray(), user.getPassword());
+                    if (result.verified) {
+                        _signInSuccess.setValue(true);
+                    } else {
+                        _errorMessage.setValue("Invalid password.");
+                        _signInSuccess.setValue(false);
+                    }
+                } else {
+                    _errorMessage.setValue("User not found.");
+                    _signInSuccess.setValue(false);
+                }
+            } else {
+                _errorMessage.setValue("An error occurred: " + task.getException().getMessage());
+                _signInSuccess.setValue(false);
+            }
+        });
+    }
+
+
     public void signInWithGoogle(AuthCredential credential) {
         mAuth.signInWithCredential(credential)
             .addOnCompleteListener(task -> {
@@ -36,12 +61,29 @@ public class SignInViewModel extends ViewModel {
                     _signInSuccess.setValue(true); // Set success to trigger navigation
                     FirebaseUser firebaseUser = mAuth.getCurrentUser();
                     if (firebaseUser != null) {
+                        String displayName = firebaseUser.getDisplayName();
+                        String firstName = "";
+                        String lastName = "";
+                        if (displayName != null && !displayName.isEmpty()) {
+                            String[] nameParts = displayName.split(" ", 2);
+                            firstName = nameParts[0];
+                            if (nameParts.length > 1) {
+                                lastName = nameParts[1];
+                            }
+                        }
+
                         // Create a new user object
                         User user = new User(
-                            firebaseUser.getUid(),
+                            firstName,
+                            lastName,
                             firebaseUser.getEmail(),
-                            firebaseUser.getDisplayName()
+                            "" // No password for Google Sign-In
                         );
+
+                        if (firebaseUser.getPhotoUrl() != null) {
+                            user.setImageUrl(firebaseUser.getPhotoUrl().toString());
+                        }
+                        
                         // Save the user to Realtime Database in the background
                         saveUserToDatabase(user);
                     } else {
