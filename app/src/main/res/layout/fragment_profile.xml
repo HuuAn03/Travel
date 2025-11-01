@@ -4,39 +4,63 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="24dp"
     tools:context=".ui.profile.ProfileFragment">
 
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/iv_profile"
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/iv_profile_image"
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:layout_marginTop="32dp"
-        android:src="@drawable/ic_default_avatar"
+        android:padding="4dp"
+        android:src="@drawable/ic_profile"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+
+        app:shapeAppearance="@style/Widget.MaterialComponents.ShapeableImageView"
+        app:cornerFamily="rounded"
+        app:cornerSize="50%"
+
+        app:strokeColor="#7CB342"
+        app:strokeWidth="2dp" />
 
     <TextView
-        android:id="@+id/tv_name"
+        android:id="@+id/tv_profile_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:textSize="20sp"
+        android:layout_marginTop="24dp"
+        android:textColor="@android:color/black"
+        android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/iv_profile"
-        tools:text="User Name" />
+        app:layout_constraintTop_toBottomOf="@+id/iv_profile_image"
+        tools:text="Huu An Nguyen" />
 
     <TextView
-        android:id="@+id/tv_email"
+        android:id="@+id/tv_profile_email"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:textColor="@android:color/darker_gray"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_name"
-        tools:text="user.email@example.com" />
+        app:layout_constraintTop_toBottomOf="@+id/tv_profile_name"
+        tools:text="huuan2303@gmail.com" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_profile_logout"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="32dp"
+        android:backgroundTint="#D32F2F"
+        android:text="Logout"
+        android:textAllCaps="false"
+        app:cornerRadius="28dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_profile_email" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

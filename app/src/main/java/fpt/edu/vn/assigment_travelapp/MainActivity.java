@@ -18,9 +18,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+// Xóa 2 import không cần thiết
+// import com.google.firebase.database.DatabaseReference;
+// import com.google.firebase.database.FirebaseDatabase;
 
 import fpt.edu.vn.assigment_travelapp.databinding.ActivityMainBinding;
 
@@ -80,23 +80,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void saveUserToDatabase() {
-        FirebaseUser firebaseUser = mAuth.getCurrentUser();
-        if (firebaseUser != null) {
-            String userId = firebaseUser.getUid();
-            String name = firebaseUser.getDisplayName();
-            String email = firebaseUser.getEmail();
-            String photoUrl = (firebaseUser.getPhotoUrl() != null) ? firebaseUser.getPhotoUrl().toString() : null;
-
-            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("users");
-
-            databaseReference.child(userId).child("name").setValue(name);
-            databaseReference.child(userId).child("email").setValue(email);
-            if (photoUrl != null) {
-                databaseReference.child(userId).child("photoUrl").setValue(photoUrl);
-            }
-        }
-    }
+    // [ĐÃ XÓA] Toàn bộ hàm saveUserToDatabase() đã được xóa
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -118,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         mAuth.signOut();
         mGoogleSignInClient.signOut().addOnCompleteListener(this, task -> {
             NavOptions navOptions = new NavOptions.Builder()
-                    .setPopUpTo(R.id.nav_host_fragment_activity_main, true)
+                    .setPopUpTo(R.id.mobile_navigation, true) // Đã sửa R.id.nav_host_fragment_activity_main thành R.id.mobile_navigation
                     .build();
             navController.navigate(R.id.signInFragment, null, navOptions);
         });
