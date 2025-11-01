@@ -1,0 +1,121 @@
+{
+  "project_info": {
+    "project_number": "77371401993",
+    "project_id": "swp391-fkoi",
+    "storage_bucket": "swp391-fkoi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:77371401993:android:ea3838755cb91500d995d8",
+        "android_client_info": {
+          "package_name": "fpt.edu.vn.assigment_travelapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "77371401993-pku2b9hsagq6t207i0gl29gcp6ehm5d3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBM7ADfcvkDe6O-ECkEwrm5XmEV2H0v1U0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "77371401993-pku2b9hsagq6t207i0gl29gcp6ehm5d3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:77371401993:android:c1cc64fe1630eceed995d8",
+        "android_client_info": {
+          "package_name": "fpt.edu.vn.assignment2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "77371401993-7gsbs6si4n3te9nnmj96g73ovvl6k6ql.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "fpt.edu.vn.assignment2",
+            "certificate_hash": "89489ca88d1360c5e04d598cf127f401394f23b5"
+          }
+        },
+        {
+          "client_id": "77371401993-teb40j80hqmdd1iqgcgo4fia2in061pg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "fpt.edu.vn.assignment2",
+            "certificate_hash": "73881dd8453e3ae6e17503b167bcf0047fae2585"
+          }
+        },
+        {
+          "client_id": "77371401993-pku2b9hsagq6t207i0gl29gcp6ehm5d3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBM7ADfcvkDe6O-ECkEwrm5XmEV2H0v1U0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "77371401993-pku2b9hsagq6t207i0gl29gcp6ehm5d3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:77371401993:android:0841e8c095d6d7c0d995d8",
+        "android_client_info": {
+          "package_name": "fpt.edu.vn.pt2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "77371401993-1duj38mprd0gkkkonrgoirq6f79q4cv9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "fpt.edu.vn.pt2",
+            "certificate_hash": "73881dd8453e3ae6e17503b167bcf0047fae2585"
+          }
+        },
+        {
+          "client_id": "77371401993-pku2b9hsagq6t207i0gl29gcp6ehm5d3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBM7ADfcvkDe6O-ECkEwrm5XmEV2H0v1U0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "77371401993-pku2b9hsagq6t207i0gl29gcp6ehm5d3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
