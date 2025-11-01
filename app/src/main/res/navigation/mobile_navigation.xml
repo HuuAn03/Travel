@@ -54,13 +54,14 @@
         android:id="@+id/navigation_my_trip"
         android:name="fpt.edu.vn.assigment_travelapp.ui.mytrip.MyTripFragment"
         android:label="My Trip"
-        tools:layout="@layout/fragment_my_trip" />
-  
-     <fragment
-        android:id="@+id/navigation_discover"
-        android:name="fpt.edu.vn.assigment_travelapp.ui.discover.DiscoverFragment"
-        android:label="@string/title_discover"
-        tools:layout="@layout/fragment_discover" />
+        tools:layout="@layout/fragment_my_trip">
+        <action
+            android:id="@+id/action_navigation_my_trip_to_newPostFragment"
+            app:destination="@id/newPostFragment" />
+        <action
+            android:id="@+id/action_navigation_my_trip_to_commentFragment"
+            app:destination="@id/commentFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_explore"
@@ -79,5 +80,17 @@
         android:name="fpt.edu.vn.assigment_travelapp.ui.profile.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_profile" />
+
+    <fragment
+        android:id="@+id/newPostFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.newpost.NewPostFragment"
+        android:label="fragment_new_post"
+        tools:layout="@layout/fragment_new_post" />
+
+    <fragment
+        android:id="@+id/commentFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.comment.CommentFragment"
+        android:label="Comments"
+        tools:layout="@layout/fragment_comment" />
 
 </navigation>

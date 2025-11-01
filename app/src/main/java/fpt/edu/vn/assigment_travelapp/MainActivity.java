@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private GoogleSignInClient mGoogleSignInClient;
     private NavController navController;
     private AppBarConfiguration appBarConfiguration;
+    private Menu optionsMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,14 +42,13 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        saveUserToDatabase();
-
-        // Configure Google Sign-In to be able to sign out
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        saveUserToDatabase();
 
         BottomNavigationView navView = findViewById(R.id.nav_view);
         appBarConfiguration = new AppBarConfiguration.Builder(
@@ -59,7 +59,14 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(binding.navView, navController);
 
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
-            if (destination.getId() == R.id.splashFragment || destination.getId() == R.id.signInFragment || destination.getId() == R.id.signUpFragment) {
+            if (optionsMenu != null) {
+                MenuItem logoutItem = optionsMenu.findItem(R.id.action_logout);
+                if (logoutItem != null) {
+                    logoutItem.setVisible(destination.getId() == R.id.navigation_profile);
+                }
+            }
+
+            if (destination.getId() == R.id.splashFragment || destination.getId() == R.id.signInFragment || destination.getId() == R.id.signUpFragment || destination.getId() == R.id.newPostFragment) {
                 navView.setVisibility(View.GONE);
                 if (getSupportActionBar() != null) {
                     getSupportActionBar().hide();
@@ -93,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        this.optionsMenu = menu;
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         return true;
     }
@@ -103,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
             logout();
             return true;
         }
-        return super.onOptionsItemSelected(item);
+        return NavigationUI.onNavDestinationSelected(item, navController) || super.onOptionsItemSelected(item);
     }
 
     private void logout() {

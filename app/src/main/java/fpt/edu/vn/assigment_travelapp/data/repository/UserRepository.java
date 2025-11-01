@@ -1,29 +1,46 @@
 package fpt.edu.vn.assigment_travelapp.data.repository;
 
+import androidx.annotation.NonNull;
+
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import fpt.edu.vn.assigment_travelapp.data.model.User;
 
 public class UserRepository implements IUserRepository {
-    private final DatabaseReference databaseReference;
+
+    private final DatabaseReference mDatabase;
 
     public UserRepository() {
-        // Initialize Firebase Realtime Database reference
-        databaseReference = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("users");
+        mDatabase = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference();
     }
 
     @Override
-    public Task<Void> saveUser(User user) {
-        // We use the user's email as the key in the database, replacing '.' with ','
-        return databaseReference.child(user.getEmail().replace(".", ",")).setValue(user);
+    public void getUser(String userId, OnGetUserCompleteListener listener) {
+        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                User user = snapshot.getValue(User.class);
+                if (user != null) {
+                    listener.onSuccess(user);
+                } else {
+                    listener.onFailure("User not found");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                listener.onFailure(error.getMessage());
+            }
+        });
     }
 
     @Override
-    public Task<DataSnapshot> getUserByEmail(String email) {
-        // Query the database for a user with the given email (with '.' replaced by ',')
-        return databaseReference.child(email.replace(".", ",")).get();
+    public Task<Void> saveUser(String uid, User user) {
+        return mDatabase.child("users").child(uid).setValue(user);
     }
 }
