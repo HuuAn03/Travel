@@ -115,6 +115,16 @@ public class ExploreFragment extends Fragment {
         viewModel.getSearchResults().observe(getViewLifecycleOwner(), posts -> {
             if (posts != null) {
                 adapter.updatePosts(posts);
+                
+                // Show/hide empty state
+                String query = binding.editTextSearch.getText().toString().trim();
+                if (posts.isEmpty()) {
+                    binding.recyclerViewPosts.setVisibility(View.GONE);
+                    binding.layoutEmptyState.setVisibility(View.VISIBLE);
+                } else {
+                    binding.recyclerViewPosts.setVisibility(View.VISIBLE);
+                    binding.layoutEmptyState.setVisibility(View.GONE);
+                }
             }
         });
 

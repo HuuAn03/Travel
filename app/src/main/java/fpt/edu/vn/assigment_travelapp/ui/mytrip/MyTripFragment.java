@@ -133,6 +133,15 @@ public class MyTripFragment extends Fragment {
         viewModel.getMyPosts().observe(getViewLifecycleOwner(), posts -> {
             if (posts != null) {
                 adapter.updatePosts(posts);
+                
+                // Show/hide empty state
+                if (posts.isEmpty()) {
+                    binding.recyclerViewPosts.setVisibility(View.GONE);
+                    binding.layoutEmptyState.setVisibility(View.VISIBLE);
+                } else {
+                    binding.recyclerViewPosts.setVisibility(View.VISIBLE);
+                    binding.layoutEmptyState.setVisibility(View.GONE);
+                }
             }
             binding.swipeRefresh.setRefreshing(false);
         });
