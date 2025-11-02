@@ -17,6 +17,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
@@ -148,16 +149,21 @@ public class ChooseLocationFragment extends Fragment {
     }
 
     private void updateMapWithLocation(GeoPoint point, String title) {
-        map.getController().setCenter(point);
-        map.getController().setZoom(15.0);
-        if (locationMarker == null) {
-            locationMarker = new Marker(map);
-            locationMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-            map.getOverlays().add(locationMarker);
-        }
-        locationMarker.setPosition(point);
-        locationMarker.setTitle(title);
-        map.invalidate();
+        map.post(() -> {
+            if (binding == null) { // Or getContext() == null, check if fragment is still alive
+                return;
+            }
+            map.getController().setCenter(point);
+            map.getController().setZoom(15.0);
+            if (locationMarker == null) {
+                locationMarker = new Marker(map);
+                locationMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                map.getOverlays().add(locationMarker);
+            }
+            locationMarker.setPosition(point);
+            locationMarker.setTitle(title);
+            map.invalidate();
+        });
     }
 
 
@@ -189,12 +195,14 @@ public class ChooseLocationFragment extends Fragment {
     public void onResume() {
         super.onResume();
         map.onResume();
+        ((AppCompatActivity) getActivity()).getSupportActionBar().hide();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         map.onPause();
+        ((AppCompatActivity) getActivity()).getSupportActionBar().show();
     }
 
     @Override

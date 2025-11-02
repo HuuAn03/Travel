@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -27,6 +29,7 @@ public class MyTripViewModel extends ViewModel {
         this.postRepository = new PostRepository();
         this.userRepository = new UserRepository();
         this.postsRef = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("posts");
+        fetchCurrentUser();
     }
 
     public LiveData<PostFetchState> getPostFetchState() {
@@ -37,18 +40,21 @@ public class MyTripViewModel extends ViewModel {
         return user;
     }
 
-    public void getUser(String userId) {
-        userRepository.getUser(userId, new IUserRepository.OnGetUserCompleteListener() {
-            @Override
-            public void onSuccess(User result) {
-                user.setValue(result);
-            }
+    private void fetchCurrentUser() {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser != null) {
+            userRepository.getUser(firebaseUser.getUid(), new IUserRepository.OnGetUserCompleteListener() {
+                @Override
+                public void onSuccess(User result) {
+                    user.setValue(result);
+                }
 
-            @Override
-            public void onFailure(String errorMessage) {
-                // Handle error
-            }
-        });
+                @Override
+                public void onFailure(String errorMessage) {
+                    // Handle error
+                }
+            });
+        }
     }
 
     public void fetchAllPosts() {

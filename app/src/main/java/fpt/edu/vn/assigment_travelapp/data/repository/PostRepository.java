@@ -74,6 +74,9 @@ public class PostRepository implements IPostRepository {
                             public void onDataChange(@NonNull DataSnapshot userSnapshot) {
                                 User user = userSnapshot.getValue(User.class);
                                 if (user != null) {
+                                    if (user.getUserId() == null) {
+                                        user.setUserId(userSnapshot.getKey());
+                                    }
                                     postsWithUser.add(new PostWithUser(post, user));
                                 }
 
@@ -138,7 +141,10 @@ public class PostRepository implements IPostRepository {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot userSnapshot) {
                                 User user = userSnapshot.getValue(User.class);
-                                if (user != null) {
+                                 if (user != null) {
+                                    if (user.getUserId() == null) {
+                                        user.setUserId(userSnapshot.getKey());
+                                    }
                                     commentsWithUser.add(new CommentWithUser(comment, user));
                                 }
 
@@ -205,5 +211,71 @@ public class PostRepository implements IPostRepository {
         mDatabase.child("posts").child(postId).updateChildren(postUpdates)
                 .addOnSuccessListener(aVoid -> listener.onSuccess())
                 .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
+    }
+
+    @Override
+    public void getPostsByUserId(String userId, OnGetPostsCompleteListener listener) {
+        mDatabase.child("posts").orderByChild("userId").equalTo(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Post> userPosts = new ArrayList<>();
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                    Post post = postSnapshot.getValue(Post.class);
+                    if (post != null) {
+                        userPosts.add(post);
+                    }
+                }
+                listener.onSuccess(userPosts);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                listener.onFailure(error.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public void getLikedPosts(String userId, OnGetPostsCompleteListener listener) {
+        mDatabase.child("posts").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Post> likedPosts = new ArrayList<>();
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                    Post post = postSnapshot.getValue(Post.class);
+                    if (post != null && post.getLikes() != null && post.getLikes().containsKey(userId)) {
+                        likedPosts.add(post);
+                    }
+                }
+                listener.onSuccess(likedPosts);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                listener.onFailure(error.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public void getBookmarkedPosts(String userId, OnGetPostsCompleteListener listener) {
+        mDatabase.child("posts").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Post> bookmarkedPosts = new ArrayList<>();
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                    Post post = postSnapshot.getValue(Post.class);
+                    if (post != null && post.getBookmarks() != null && post.getBookmarks().containsKey(userId)) {
+                        bookmarkedPosts.add(post);
+                    }
+                }
+                listener.onSuccess(bookmarkedPosts);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                listener.onFailure(error.getMessage());
+            }
+        });
     }
 }

@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            if (destination.getId() == R.id.splashFragment || destination.getId() == R.id.signInFragment || destination.getId() == R.id.signUpFragment || destination.getId() == R.id.newPostFragment) {
+            if (destination.getId() == R.id.splashFragment || destination.getId() == R.id.signInFragment || destination.getId() == R.id.signUpFragment || destination.getId() == R.id.newPostFragment || destination.getId() == R.id.fullScreenMapFragment || destination.getId() == R.id.chooseLocationFragment) {
                 navView.setVisibility(View.GONE);
                 if (getSupportActionBar() != null) {
                     getSupportActionBar().hide();

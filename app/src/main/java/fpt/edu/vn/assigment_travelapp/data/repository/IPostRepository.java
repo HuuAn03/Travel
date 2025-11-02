@@ -10,6 +10,9 @@ import fpt.edu.vn.assigment_travelapp.data.model.PostWithUser;
 public interface IPostRepository {
     void createPost(String base64Image, String caption, OnPostCreationCompleteListener listener);
     void getAllPosts(OnGetAllPostsCompleteListener listener);
+    void getPostsByUserId(String userId, OnGetPostsCompleteListener listener);
+    void getLikedPosts(String userId, OnGetPostsCompleteListener listener);
+    void getBookmarkedPosts(String userId, OnGetPostsCompleteListener listener);
     void addComment(String postId, Comment comment, OnCommentAddCompleteListener listener);
     void getCommentsWithUsers(String postId, OnGetCommentsWithUsersCompleteListener listener);
     void deletePost(String postId, OnDeletePostCompleteListener listener);
@@ -23,6 +26,11 @@ public interface IPostRepository {
 
     interface OnGetAllPostsCompleteListener {
         void onSuccess(List<PostWithUser> posts);
+        void onFailure(String errorMessage);
+    }
+
+    interface OnGetPostsCompleteListener {
+        void onSuccess(List<Post> posts);
         void onFailure(String errorMessage);
     }
 

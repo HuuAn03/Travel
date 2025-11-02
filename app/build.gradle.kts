@@ -57,8 +57,7 @@ dependencies {
     implementation("at.favre.lib:bcrypt:0.9.0")
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-    implementation("com.github.bumptech.glide:glide:4.12.0")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
 
 }
