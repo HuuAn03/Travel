@@ -1,8 +1,11 @@
 package fpt.edu.vn.assigment_travelapp.data.model;
 
 public class PostWithUser {
-    private final Post post;
-    private final User user;
+    private Post post;
+    private User user;
+
+    public PostWithUser() {
+    }
 
     public PostWithUser(Post post, User user) {
         this.post = post;
@@ -13,7 +16,16 @@ public class PostWithUser {
         return post;
     }
 
+    public void setPost(Post post) {
+        this.post = post;
+    }
+
     public User getUser() {
         return user;
     }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }
+

@@ -1,6 +1,5 @@
 package fpt.edu.vn.assigment_travelapp.adapter;
 
-import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,7 +7,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -23,113 +21,87 @@ import fpt.edu.vn.assigment_travelapp.data.model.User;
 
 public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentViewHolder> {
 
-    private List<CommentWithUser> commentList;
-    private OnCommentActionListener listener;
+    private List<CommentWithUser> comments;
 
-    public interface OnCommentActionListener {
-        void onReplyClick(int position);
-    }
-
-    public void setOnCommentActionListener(OnCommentActionListener listener) {
-        this.listener = listener;
-    }
-
-    public CommentAdapter(List<CommentWithUser> commentList) {
-        this.commentList = commentList;
+    public CommentAdapter(List<CommentWithUser> comments) {
+        this.comments = comments;
     }
 
     @NonNull
     @Override
     public CommentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.comment_item, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_comment, parent, false);
         return new CommentViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull CommentViewHolder holder, int position) {
-        CommentWithUser commentWithUser = commentList.get(position);
+        CommentWithUser commentWithUser = comments.get(position);
         holder.bind(commentWithUser);
     }
 
     @Override
     public int getItemCount() {
-        return commentList.size();
+        return comments != null ? comments.size() : 0;
+    }
+
+    public void updateComments(List<CommentWithUser> newComments) {
+        this.comments = newComments;
+        notifyDataSetChanged();
     }
 
     class CommentViewHolder extends RecyclerView.ViewHolder {
-        private final CircleImageView ivAvatar;
-        private final TextView tvUsername;
-        private final TextView tvHandle;
-        private final TextView tvCommentContent;
-        private final TextView tvTimestamp;
-        private final ImageView ivReply;
-        private final TextView tvViewReplies;
-        private final RecyclerView rvReplies;
+        private CircleImageView ivAvatar;
+        private TextView tvUsername;
+        private TextView tvCommentText;
+        private TextView tvCommentDate;
 
         public CommentViewHolder(@NonNull View itemView) {
             super(itemView);
             ivAvatar = itemView.findViewById(R.id.iv_avatar);
             tvUsername = itemView.findViewById(R.id.tv_username);
-            tvHandle = itemView.findViewById(R.id.tv_handle);
-            tvCommentContent = itemView.findViewById(R.id.tv_comment_content);
-            tvTimestamp = itemView.findViewById(R.id.tv_timestamp);
-            ivReply = itemView.findViewById(R.id.iv_reply);
-            tvViewReplies = itemView.findViewById(R.id.tv_view_replies);
-            rvReplies = itemView.findViewById(R.id.rv_replies);
-
-            ivReply.setOnClickListener(v -> {
-                int position = getAdapterPosition();
-                if (listener != null && position != RecyclerView.NO_POSITION) {
-                    listener.onReplyClick(position);
-                }
-            });
+            tvCommentText = itemView.findViewById(R.id.tv_comment_text);
+            tvCommentDate = itemView.findViewById(R.id.tv_comment_date);
         }
 
         public void bind(CommentWithUser commentWithUser) {
-            User user = commentWithUser.getUser();
+            if (commentWithUser == null) return;
+
             Comment comment = commentWithUser.getComment();
+            User user = commentWithUser.getUser();
 
-            tvUsername.setText(user.getName());
-            tvHandle.setText("@" + user.getEmail().split("@")[0]); // Simplified handle
-            tvCommentContent.setText(comment.getText());
+            if (comment == null || user == null) return;
 
-            // Format and set timestamp
-            tvTimestamp.setText(getRelativeTime(comment.getTimestamp()));
+            tvUsername.setText(user.getName() != null ? user.getName() : "Unknown User");
+            tvCommentText.setText(comment.getText());
 
-            Glide.with(itemView.getContext())
-                    .load(user.getPhotoUrl())
-                    .placeholder(R.drawable.ic_default_avatar)
-                    .into(ivAvatar);
-
-            // Handle replies
-            List<CommentWithUser> replies = commentWithUser.getReplies();
-            if (replies != null && !replies.isEmpty()) {
-                tvViewReplies.setVisibility(View.VISIBLE);
-                tvViewReplies.setText("View " + replies.size() + " replies");
-
-                CommentAdapter replyAdapter = new CommentAdapter(replies);
-                replyAdapter.setOnCommentActionListener(listener);
-                rvReplies.setLayoutManager(new LinearLayoutManager(itemView.getContext()));
-                rvReplies.setAdapter(replyAdapter);
-
-                tvViewReplies.setOnClickListener(v -> {
-                    if (rvReplies.getVisibility() == View.GONE) {
-                        rvReplies.setVisibility(View.VISIBLE);
-                        tvViewReplies.setText("Hide replies");
-                    } else {
-                        rvReplies.setVisibility(View.GONE);
-                        tvViewReplies.setText("View " + replies.size() + " replies");
-                    }
-                });
-
+            if (user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
+                Glide.with(itemView.getContext()).load(user.getPhotoUrl()).into(ivAvatar);
             } else {
-                tvViewReplies.setVisibility(View.GONE);
-                rvReplies.setVisibility(View.GONE);
+                ivAvatar.setImageResource(R.drawable.ic_default_avatar);
             }
+
+            tvCommentDate.setText(getRelativeTime(comment.getTimestamp()));
         }
 
         private String getRelativeTime(long timestamp) {
-            return DateUtils.getRelativeTimeSpanString(timestamp, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS).toString();
+            long now = System.currentTimeMillis();
+            long diff = now - timestamp;
+
+            if (diff < 60000) {
+                return "just now";
+            } else if (diff < 3600000) {
+                return (diff / 60000) + "m ago";
+            } else if (diff < 86400000) {
+                return (diff / 3600000) + "h ago";
+            } else if (diff < 604800000) {
+                return (diff / 86400000) + "d ago";
+            } else {
+                return android.text.format.DateUtils.getRelativeTimeSpanString(
+                        timestamp, now, android.text.format.DateUtils.WEEK_IN_MILLIS).toString();
+            }
         }
     }
 }
+

@@ -1,16 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
+    id("org.jetbrains.kotlin.android")
 }
 
 android {
     namespace = "fpt.edu.vn.assigment_travelapp"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "fpt.edu.vn.assigment_travelapp"
-        minSdk = 33
-        targetSdk = 36
+        minSdk = 26
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -27,8 +28,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
     }
     buildFeatures {
         viewBinding = true
@@ -44,23 +48,31 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+    // Network
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Image loading
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
-    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-database")
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
-    implementation("at.favre.lib:bcrypt:0.9.0")
+    implementation("com.google.firebase:firebase-storage")
+
+    // Google Play Services
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // Other libraries
+    implementation("at.favre.lib:bcrypt:0.10.2")
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-    implementation("com.github.bumptech.glide:glide:4.12.0")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
-    implementation("com.github.bumptech.glide:glide:4.16.0")
 
 }
+

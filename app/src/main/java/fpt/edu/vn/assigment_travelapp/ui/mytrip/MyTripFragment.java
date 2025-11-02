@@ -1,9 +1,12 @@
 package fpt.edu.vn.assigment_travelapp.ui.mytrip;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -12,34 +15,31 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 import fpt.edu.vn.assigment_travelapp.R;
 import fpt.edu.vn.assigment_travelapp.adapter.PostAdapter;
-import fpt.edu.vn.assigment_travelapp.data.model.Post;
-import fpt.edu.vn.assigment_travelapp.data.model.PostWithUser;
 import fpt.edu.vn.assigment_travelapp.databinding.FragmentMyTripBinding;
-import fpt.edu.vn.assigment_travelapp.ui.mytrip.MyTripViewModel;
 
-public class MyTripFragment extends Fragment implements PostAdapter.OnPostActionListener {
+public class MyTripFragment extends Fragment {
 
     private FragmentMyTripBinding binding;
     private MyTripViewModel viewModel;
-    private PostAdapter postAdapter;
-    private List<PostWithUser> postList = new ArrayList<>();
+    private PostAdapter adapter;
     private FirebaseUser currentUser;
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         binding = FragmentMyTripBinding.inflate(inflater, container, false);
         viewModel = new ViewModelProvider(this).get(MyTripViewModel.class);
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
         return binding.getRoot();
     }
 
@@ -48,48 +48,105 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
         super.onViewCreated(view, savedInstanceState);
 
         setupRecyclerView();
+        setupSwipeRefresh();
         observeViewModel();
 
-        binding.fabNewPost.setOnClickListener(v -> {
-            NavHostFragment.findNavController(MyTripFragment.this)
-                    .navigate(R.id.action_navigation_my_trip_to_newPostFragment);
-        });
-
-        binding.swipeRefreshLayout.setOnRefreshListener(() -> {
-            viewModel.fetchAllPosts();
-        });
-
-        viewModel.fetchAllPosts();
+        if (currentUser != null) {
+            viewModel.fetchMyPosts(currentUser.getUid());
+        }
     }
 
     private void setupRecyclerView() {
-        postAdapter = new PostAdapter(postList, currentUser != null ? currentUser.getUid() : "");
-        postAdapter.setOnPostActionListener(this);
+        adapter = new PostAdapter(new ArrayList<>(),
+                currentUser != null ? currentUser.getUid() : null,
+                new PostAdapter.OnPostActionListener() {
+                    @Override
+                    public void onLikeClick(String postId) {
+                        if (currentUser != null) {
+                            viewModel.toggleLike(postId, currentUser.getUid());
+                        }
+                    }
+
+                    @Override
+                    public void onCommentClick(String postId) {
+                        Bundle bundle = new Bundle();
+                        bundle.putString("postId", postId);
+                        NavHostFragment.findNavController(MyTripFragment.this)
+                                .navigate(R.id.action_navigation_my_trip_to_commentFragment, bundle);
+                    }
+
+                    @Override
+                    public void onBookmarkClick(String postId) {
+                        if (currentUser != null) {
+                            viewModel.toggleBookmark(postId, currentUser.getUid());
+                        }
+                    }
+
+                    @Override
+                    public void onEditClick(String postId) {
+                        showEditDialog(postId);
+                    }
+
+                    @Override
+                    public void onDeleteClick(String postId) {
+                        showDeleteDialog(postId);
+                    }
+
+                    @Override
+                    public void onPostClick(String postId) {
+                        Bundle bundle = new Bundle();
+                        bundle.putString("postId", postId);
+                        NavHostFragment.findNavController(MyTripFragment.this)
+                                .navigate(R.id.action_navigation_my_trip_to_postDetailsFragment, bundle);
+                    }
+                });
+
         binding.recyclerViewPosts.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.recyclerViewPosts.setAdapter(postAdapter);
+        binding.recyclerViewPosts.setAdapter(adapter);
+    }
+
+    private void setupSwipeRefresh() {
+        binding.swipeRefresh.setOnRefreshListener(() -> {
+            if (currentUser != null) {
+                viewModel.fetchMyPosts(currentUser.getUid());
+            }
+        });
+    }
+
+    private void showEditDialog(String postId) {
+        // Implementation for edit dialog
+        Toast.makeText(getContext(), "Edit functionality", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showDeleteDialog(String postId) {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Delete Post")
+                .setMessage("Are you sure you want to delete this post?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    viewModel.deletePost(postId);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void observeViewModel() {
-        viewModel.getPostFetchState().observe(getViewLifecycleOwner(), state -> {
-            switch (state.getStatus()) {
-                case LOADING:
-                    binding.progressBar.setVisibility(View.VISIBLE);
-                    binding.recyclerViewPosts.setVisibility(View.GONE);
-                    binding.swipeRefreshLayout.setRefreshing(false);
-                    break;
-                case SUCCESS:
-                    binding.progressBar.setVisibility(View.GONE);
-                    binding.recyclerViewPosts.setVisibility(View.VISIBLE);
-                    binding.swipeRefreshLayout.setRefreshing(false);
-                    postList.clear();
-                    postList.addAll(state.getPosts());
-                    postAdapter.notifyDataSetChanged();
-                    break;
-                case ERROR:
-                    binding.progressBar.setVisibility(View.GONE);
-                    binding.swipeRefreshLayout.setRefreshing(false);
-                    Toast.makeText(getContext(), "Error: " + state.getErrorMessage(), Toast.LENGTH_SHORT).show();
-                    break;
+        viewModel.getMyPosts().observe(getViewLifecycleOwner(), posts -> {
+            if (posts != null) {
+                adapter.updatePosts(posts);
+            }
+            binding.swipeRefresh.setRefreshing(false);
+        });
+
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
+            if (error != null) {
+                Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                binding.swipeRefresh.setRefreshing(false);
+            }
+        });
+
+        viewModel.getDeleteSuccess().observe(getViewLifecycleOwner(), success -> {
+            if (success != null && success) {
+                Toast.makeText(getContext(), "Post deleted successfully", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -99,52 +156,5 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
         super.onDestroyView();
         binding = null;
     }
-
-    @Override
-    public void onLikeClick(int position) {
-        if (currentUser != null) {
-            PostWithUser postWithUser = postList.get(position);
-            Post post = postWithUser.getPost();
-            String userId = currentUser.getUid();
-
-            Map<String, Boolean> likes = post.getLikes();
-            if (likes.containsKey(userId)) {
-                likes.remove(userId);
-            } else {
-                likes.put(userId, true);
-            }
-            postAdapter.notifyItemChanged(position);
-
-            viewModel.toggleLike(post.getPostId(), userId);
-        }
-    }
-
-    @Override
-    public void onSaveClick(int position) {
-        if (currentUser != null) {
-            PostWithUser postWithUser = postList.get(position);
-            Post post = postWithUser.getPost();
-            String userId = currentUser.getUid();
-
-            Map<String, Boolean> bookmarks = post.getBookmarks();
-            if (bookmarks.containsKey(userId)) {
-                bookmarks.remove(userId);
-            } else {
-                bookmarks.put(userId, true);
-            }
-            postAdapter.notifyItemChanged(position);
-
-            viewModel.toggleBookmark(post.getPostId(), userId);
-        }
-    }
-
-    @Override
-    public void onCommentClick(int position) {
-        PostWithUser postWithUser = postList.get(position);
-        String postId = postWithUser.getPost().getPostId();
-        Bundle bundle = new Bundle();
-        bundle.putString("postId", postId);
-        NavHostFragment.findNavController(MyTripFragment.this)
-                .navigate(R.id.action_navigation_my_trip_to_commentFragment, bundle);
-    }
 }
+

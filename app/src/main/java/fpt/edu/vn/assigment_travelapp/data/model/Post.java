@@ -9,6 +9,7 @@ public class Post {
     private String caption;
     private String userId;
     private long timestamp;
+    private String location;
     private Map<String, Boolean> likes = new HashMap<>();
     private Map<String, Boolean> bookmarks = new HashMap<>();
     private Map<String, Comment> comments = new HashMap<>();
@@ -24,6 +25,15 @@ public class Post {
         this.caption = caption;
         this.userId = userId;
         this.timestamp = timestamp;
+    }
+
+    public Post(String postId, String imageUrl, String caption, String userId, long timestamp, String location) {
+        this.postId = postId;
+        this.imageUrl = imageUrl;
+        this.caption = caption;
+        this.userId = userId;
+        this.timestamp = timestamp;
+        this.location = location;
     }
 
     public String getPostId() {
@@ -89,4 +99,13 @@ public class Post {
     public void setComments(Map<String, Comment> comments) {
         this.comments = comments;
     }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
 }
+

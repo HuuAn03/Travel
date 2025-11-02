@@ -1,176 +1,128 @@
 package fpt.edu.vn.assigment_travelapp.ui.profile;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log; // <-- IMPORT QUAN TRỌNG
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-// ViewModel không còn được sử dụng nữa
-import androidx.navigation.NavController;
-import androidx.navigation.NavOptions;
-import androidx.navigation.Navigation;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser; // <-- Import
-import com.google.firebase.database.DataSnapshot; // <-- Import
-import com.google.firebase.database.DatabaseError; // <-- Import
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener; // <-- Import
+import com.google.firebase.auth.FirebaseUser;
 
 import fpt.edu.vn.assigment_travelapp.R;
-import fpt.edu.vn.assigment_travelapp.data.model.User; // <-- Import
+import fpt.edu.vn.assigment_travelapp.data.model.User;
 import fpt.edu.vn.assigment_travelapp.databinding.FragmentProfileBinding;
 
 public class ProfileFragment extends Fragment {
 
-    private static final String TAG = "ProfileFragment"; // <-- Tag để debug
     private FragmentProfileBinding binding;
+    private ProfileViewModel viewModel;
+    private FirebaseUser currentUser;
+    private ActivityResultLauncher<Intent> imagePickerLauncher;
+    private Uri selectedImageUri;
 
-    private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener authStateListener; // <-- Listener cho Auth
-
-    private GoogleSignInClient mGoogleSignInClient;
-    private NavController navController;
-
-    private DatabaseReference mDatabase;
-    private ValueEventListener databaseListener; // <-- Listener cho Database
-    private DatabaseReference currentUserRef;
-
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-
-        Log.d(TAG, "onCreateView: Fragment đang được tạo.");
-
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         binding = FragmentProfileBinding.inflate(inflater, container, false);
-        View root = binding.getRoot();
+        viewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        mAuth = FirebaseAuth.getInstance();
-        mDatabase = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("users");
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getData() != null && result.getData().getData() != null) {
+                        selectedImageUri = result.getData().getData();
+                        if (selectedImageUri != null && currentUser != null) {
+                            viewModel.updateAvatar(currentUser.getUid(), selectedImageUri);
+                        }
+                    }
+                });
 
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build();
-        mGoogleSignInClient = GoogleSignIn.getClient(requireActivity(), gso);
-
-        return root;
+        return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        navController = Navigation.findNavController(view);
-
-        // Nút logout
-        binding.btnProfileLogout.setOnClickListener(v -> logout());
-
-        // Tạo AuthStateListener
-        setupAuthStateListener();
-    }
-
-    private void setupAuthStateListener() {
-        Log.d(TAG, "Đang thiết lập AuthStateListener...");
-
-        authStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-                if (firebaseUser != null) {
-                    // Người dùng đã đăng nhập
-                    Log.i(TAG, "AuthStateListener: ĐÃ TÌM THẤY người dùng: " + firebaseUser.getEmail());
-                    loadProfileData(firebaseUser);
-                } else {
-                    // Người dùng đã đăng xuất
-                    Log.w(TAG, "AuthStateListener: KHÔNG TÌM THẤY người dùng (đã đăng xuất).");
-                }
-            }
-        };
-
-        // Gắn listener
-        mAuth.addAuthStateListener(authStateListener);
-    }
-
-    private void loadProfileData(FirebaseUser firebaseUser) {
-        String email = firebaseUser.getEmail();
-        if (email == null || email.isEmpty()) {
-            Log.e(TAG, "Lỗi: Email của người dùng bị rỗng.");
-            return;
+        if (currentUser != null) {
+            viewModel.fetchUser(currentUser.getUid());
+            setupClickListeners();
         }
 
-        String dbKey = email.replace(".", ",");
-        currentUserRef = mDatabase.child(dbKey);
+        observeViewModel();
+    }
 
-        Log.d(TAG, "Bắt đầu lắng nghe database tại key: " + dbKey);
+    private void setupClickListeners() {
+        binding.fabEditAvatar.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType("image/*");
+            imagePickerLauncher.launch(intent);
+        });
 
-        // Tạo Database Listener
-        databaseListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                // Biến dbKey đã được định nghĩa ở bên ngoài hàm này
-                String dbKey = mAuth.getCurrentUser().getEmail().replace(".", ",");
+        binding.buttonSaveProfile.setOnClickListener(v -> {
+            if (currentUser != null) {
+                String name = binding.editTextFirstName.getText().toString().trim();
+                String bio = binding.editTextPhone.getText().toString().trim();
 
-                if (!snapshot.exists()) {
-                    Log.e(TAG, "LỖI DATABASE: Không tìm thấy dữ liệu (snapshot.exists() == false) tại key: " + dbKey);
-                    Toast.makeText(getContext(), "Lỗi: Không tìm thấy data", Toast.LENGTH_SHORT).show();
+                if (TextUtils.isEmpty(name)) {
+                    Toast.makeText(getContext(), "Please enter your name", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                User user = snapshot.getValue(User.class);
+                User user = new User();
+                user.setName(name);
+                user.setBio(bio);
+                user.setEmail(currentUser.getEmail());
 
-                if (user == null) {
-                    Log.e(TAG, "LỖI MAP DATA: Data tồn tại nhưng không map được (user == null). Kiểm tra lại file User.java và database.");
-                    Toast.makeText(getContext(), "Lỗi: Map data thất bại", Toast.LENGTH_SHORT).show();
-                    return;
+                viewModel.updateUser(currentUser.getUid(), user);
+            }
+        });
+    }
+
+    private void observeViewModel() {
+        viewModel.getUser().observe(getViewLifecycleOwner(), user -> {
+            if (user != null) {
+                binding.textProfileName.setText(user.getName());
+                binding.textProfileEmail.setText(user.getEmail());
+                binding.editTextFirstName.setText(user.getName());
+                if (user.getBio() != null) {
+                    binding.editTextPhone.setText(user.getBio());
                 }
 
-                // THÀNH CÔNG!
-                Log.i(TAG, "THÀNH CÔNG: Tải và map data: " + user.getEmail());
-
-                // Đảm bảo fragment vẫn còn "sống"
-                if (binding != null) {
-
-                    // === CÁC DÒNG ĐÃ SỬA LỖI ===
-                    binding.tvProfileName.setText(user.getName());
-                    binding.tvProfileEmail.setText(user.getEmail());
-                    // =========================
-
-                    Glide.with(ProfileFragment.this)
+                if (user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
+                    Glide.with(this)
                             .load(user.getPhotoUrl())
                             .placeholder(R.drawable.ic_profile)
                             .circleCrop()
-                            .into(binding.ivProfileImage);
+                            .into(binding.imageProfileAvatar);
                 }
             }
+        });
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(TAG, "LỖI DATABASE: " + error.getMessage());
-                Toast.makeText(getContext(), "Lỗi DB: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        viewModel.getUpdateSuccess().observe(getViewLifecycleOwner(), success -> {
+            if (success != null && success) {
+                Toast.makeText(getContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show();
             }
-        };
+        });
 
-        // Gắn listener vào database
-        currentUserRef.addValueEventListener(databaseListener);
-    }
-
-    private void logout() {
-        mAuth.signOut();
-        mGoogleSignInClient.signOut().addOnCompleteListener(requireActivity(), task -> {
-            NavOptions navOptions = new NavOptions.Builder()
-                    .setPopUpTo(R.id.mobile_navigation, true)
-                    .build();
-            navController.navigate(R.id.signInFragment, null, navOptions);
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
+            if (error != null) {
+                Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
@@ -178,15 +130,6 @@ public class ProfileFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
-
-        // Gỡ bỏ các listener để tránh rò rỉ bộ nhớ
-        if (authStateListener != null) {
-            mAuth.removeAuthStateListener(authStateListener);
-            Log.d(TAG, "Đã gỡ AuthStateListener.");
-        }
-        if (databaseListener != null && currentUserRef != null) {
-            currentUserRef.removeEventListener(databaseListener);
-            Log.d(TAG, "Đã gỡ ValueEventListener.");
-        }
     }
 }
+

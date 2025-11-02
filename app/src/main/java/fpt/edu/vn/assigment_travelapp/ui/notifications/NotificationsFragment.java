@@ -35,3 +35,4 @@ public class NotificationsFragment extends Fragment {
         binding = null;
     }
 }
+

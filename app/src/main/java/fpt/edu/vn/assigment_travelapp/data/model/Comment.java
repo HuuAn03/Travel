@@ -6,22 +6,20 @@ public class Comment {
     private String userId;
     private String text;
     private long timestamp;
-    private String parentCommentId; // Null if it's a top-level comment
+    private String parentCommentId; // For nested comments/replies
 
     public Comment() {
-        // Default constructor for Firebase
+        // Default constructor required for Firebase
     }
 
-    public Comment(String commentId, String postId, String userId, String text, long timestamp, String parentCommentId) {
+    public Comment(String commentId, String postId, String userId, String text, long timestamp) {
         this.commentId = commentId;
         this.postId = postId;
         this.userId = userId;
         this.text = text;
         this.timestamp = timestamp;
-        this.parentCommentId = parentCommentId;
     }
 
-    // Getters and Setters
     public String getCommentId() {
         return commentId;
     }
@@ -70,3 +68,4 @@ public class Comment {
         this.parentCommentId = parentCommentId;
     }
 }
+

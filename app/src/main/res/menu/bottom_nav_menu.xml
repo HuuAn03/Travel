@@ -3,27 +3,28 @@
 
     <item
         android:id="@+id/navigation_home"
-        android:icon="@drawable/ic_home_selected"
+        android:icon="@drawable/ic_home"
         android:title="@string/title_home" />
 
     <item
         android:id="@+id/navigation_my_trip"
         android:icon="@drawable/ic_my_trip"
-        android:title="My Trip" />
+        android:title="@string/title_my_trip" />
 
     <item
         android:id="@+id/navigation_explore"
         android:icon="@drawable/ic_explore"
-        android:title="Explore" />
+        android:title="@string/title_explore" />
 
     <item
         android:id="@+id/navigation_favorite"
         android:icon="@drawable/ic_favorite"
-        android:title="Favorite" />
+        android:title="@string/title_favorite" />
 
     <item
         android:id="@+id/navigation_profile"
         android:icon="@drawable/ic_profile"
-        android:title="Profile" />
+        android:title="@string/title_profile" />
 
 </menu>
+

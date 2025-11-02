@@ -8,89 +8,175 @@
     <fragment
         android:id="@+id/splashFragment"
         android:name="fpt.edu.vn.assigment_travelapp.ui.splash.SplashFragment"
-        android:label="fragment_splash"
+        android:label="Splash"
         tools:layout="@layout/fragment_splash">
+
         <action
             android:id="@+id/action_splashFragment_to_signInFragment"
-            app:destination="@id/signInFragment"
-            app:popUpTo="@id/splashFragment"
-            app:popUpToInclusive="true" />
+            app:destination="@id/signInFragment" />
+
+        <action
+            android:id="@+id/action_splashFragment_to_navigation_home"
+            app:destination="@id/navigation_home" />
+
     </fragment>
 
     <fragment
         android:id="@+id/signInFragment"
-        android:name="fpt.edu.vn.assigment_travelapp.ui.login.SignInFragment"
-        android:label="fragment_sign_in"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.signin.SignInFragment"
+        android:label="Sign In"
         tools:layout="@layout/fragment_sign_in">
+
         <action
             android:id="@+id/action_signInFragment_to_signUpFragment"
             app:destination="@id/signUpFragment" />
+
         <action
             android:id="@+id/action_signInFragment_to_navigation_home"
             app:destination="@id/navigation_home"
             app:popUpTo="@id/signInFragment"
             app:popUpToInclusive="true" />
+
     </fragment>
 
     <fragment
         android:id="@+id/signUpFragment"
-        android:name="fpt.edu.vn.assigment_travelapp.ui.register.SignUpFragment"
-        android:label="fragment_sign_up"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.signup.SignUpFragment"
+        android:label="Sign Up"
         tools:layout="@layout/fragment_sign_up">
+
         <action
             android:id="@+id/action_signUpFragment_to_signInFragment"
-            app:destination="@id/signInFragment"
-            app:popUpTo="@id/signInFragment"
+            app:destination="@id/signInFragment" />
+
+        <action
+            android:id="@+id/action_signUpFragment_to_navigation_home"
+            app:destination="@id/navigation_home"
+            app:popUpTo="@id/signUpFragment"
             app:popUpToInclusive="true" />
+
     </fragment>
 
     <fragment
         android:id="@+id/navigation_home"
         android:name="fpt.edu.vn.assigment_travelapp.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/action_navigation_home_to_commentFragment"
+            app:destination="@id/commentFragment" />
+
+        <action
+            android:id="@+id/action_navigation_home_to_postDetailsFragment"
+            app:destination="@id/postDetailsFragment">
+            <argument
+                android:name="postId"
+                app:argType="string" />
+        </action>
+
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_my_trip"
         android:name="fpt.edu.vn.assigment_travelapp.ui.mytrip.MyTripFragment"
-        android:label="My Trip"
+        android:label="@string/title_my_trip"
         tools:layout="@layout/fragment_my_trip">
-        <action
-            android:id="@+id/action_navigation_my_trip_to_newPostFragment"
-            app:destination="@id/newPostFragment" />
+
         <action
             android:id="@+id/action_navigation_my_trip_to_commentFragment"
             app:destination="@id/commentFragment" />
+
+        <action
+            android:id="@+id/action_navigation_my_trip_to_postDetailsFragment"
+            app:destination="@id/postDetailsFragment">
+            <argument
+                android:name="postId"
+                app:argType="string" />
+        </action>
+
     </fragment>
 
     <fragment
         android:id="@+id/navigation_explore"
         android:name="fpt.edu.vn.assigment_travelapp.ui.explore.ExploreFragment"
-        android:label="Explore"
-        tools:layout="@layout/fragment_explore" />
+        android:label="@string/title_explore"
+        tools:layout="@layout/fragment_explore">
+
+        <action
+            android:id="@+id/action_navigation_explore_to_commentFragment"
+            app:destination="@id/commentFragment" />
+
+        <action
+            android:id="@+id/action_navigation_explore_to_postDetailsFragment"
+            app:destination="@id/postDetailsFragment">
+            <argument
+                android:name="postId"
+                app:argType="string" />
+        </action>
+
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_favorite"
         android:name="fpt.edu.vn.assigment_travelapp.ui.favorite.FavoriteFragment"
-        android:label="Favorite"
-        tools:layout="@layout/fragment_favorite" />
+        android:label="@string/title_favorite"
+        tools:layout="@layout/fragment_favorite">
+
+        <action
+            android:id="@+id/action_navigation_favorite_to_commentFragment"
+            app:destination="@id/commentFragment" />
+
+        <action
+            android:id="@+id/action_navigation_favorite_to_postDetailsFragment"
+            app:destination="@id/postDetailsFragment">
+            <argument
+                android:name="postId"
+                app:argType="string" />
+        </action>
+
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_profile"
         android:name="fpt.edu.vn.assigment_travelapp.ui.profile.ProfileFragment"
-        android:label="Profile"
+        android:label="@string/title_profile"
         tools:layout="@layout/fragment_profile" />
 
     <fragment
         android:id="@+id/newPostFragment"
         android:name="fpt.edu.vn.assigment_travelapp.ui.newpost.NewPostFragment"
-        android:label="fragment_new_post"
+        android:label="New Post"
         tools:layout="@layout/fragment_new_post" />
 
     <fragment
         android:id="@+id/commentFragment"
         android:name="fpt.edu.vn.assigment_travelapp.ui.comment.CommentFragment"
         android:label="Comments"
-        tools:layout="@layout/fragment_comment" />
+        tools:layout="@layout/fragment_comment">
+        <argument
+            android:name="postId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/postDetailsFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.postdetails.PostDetailsFragment"
+        android:label="Post Details"
+        tools:layout="@layout/fragment_post_details">
+        <argument
+            android:name="postId"
+            app:argType="string" />
+
+        <action
+            android:id="@+id/action_postDetailsFragment_to_commentFragment"
+            app:destination="@id/commentFragment" />
+
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_newPostFragment"
+        app:destination="@id/newPostFragment" />
 
 </navigation>
+
