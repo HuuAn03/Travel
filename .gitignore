@@ -124,6 +124,9 @@ local.properties
 # Firebase
 google-services.json
 
+# Visual Studio
+.vs/
+
 # Documentation files (optional - uncomment if you don't want to commit docs)
 # *.md
 # !README.md
