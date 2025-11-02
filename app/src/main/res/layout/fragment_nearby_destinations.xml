@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white">
+
+    <!-- Map Container (Upper Part) -->
+    <FrameLayout
+        android:id="@+id/map_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2">
+
+        <!-- Placeholder map -->
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:background="@drawable/image_placeholder"
+            android:contentDescription="Map view" />
+
+        <!-- Map Markers will be added programmatically -->
+        <ImageView
+            android:id="@+id/iv_map_marker_1"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="100dp"
+            android:layout_marginTop="150dp"
+            android:src="@android:drawable/ic_menu_mylocation"
+            android:tint="@color/green_brand"
+            android:background="@drawable/image_placeholder"
+            android:backgroundTint="@color/white" />
+
+        <ImageView
+            android:id="@+id/iv_map_marker_2"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="200dp"
+            android:layout_marginTop="200dp"
+            android:src="@android:drawable/ic_menu_mylocation"
+            android:tint="@color/green_brand"
+            android:background="@drawable/image_placeholder"
+            android:backgroundTint="@color/white" />
+
+        <ImageView
+            android:id="@+id/iv_map_marker_3"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="250dp"
+            android:layout_marginTop="100dp"
+            android:src="@android:drawable/ic_menu_mylocation"
+            android:tint="@color/green_brand"
+            android:background="@drawable/image_placeholder"
+            android:backgroundTint="@color/white" />
+
+        <!-- My Location Button -->
+        <ImageButton
+            android:id="@+id/btn_my_location"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:src="@android:drawable/ic_menu_mylocation"
+            android:background="@drawable/image_placeholder"
+            android:backgroundTint="@color/white"
+            android:elevation="4dp" />
+    </FrameLayout>
+
+    <!-- Bottom Sheet (Lower Part) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/bottom_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Handle Bar -->
+            <View
+                android:layout_width="40dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="16dp"
+                android:background="#E0E0E0" />
+
+            <!-- Title and See All -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Nearby Destinations"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/tv_see_all"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="See All"
+                    android:textSize="14sp"
+                    android:textColor="@color/green_brand"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+
+            <!-- Search Bar (Optional, inside bottom sheet) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
+                android:background="@drawable/image_placeholder"
+                android:backgroundTint="#F5F5F5"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginBottom="16dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/ic_menu_search"
+                    android:tint="#757575" />
+
+                <EditText
+                    android:id="@+id/et_search"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Search..."
+                    android:textSize="14sp"
+                    android:textColor="#757575"
+                    android:background="@android:color/transparent"
+                    android:layout_marginStart="12dp" />
+
+                <ImageView
+                    android:id="@+id/iv_filter"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/ic_menu_sort_by_size"
+                    android:tint="#757575" />
+            </LinearLayout>
+
+            <!-- Nearby Destinations RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_nearby_destinations"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/item_destination_small" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+</LinearLayout>
+

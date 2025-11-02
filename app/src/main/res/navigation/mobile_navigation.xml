@@ -48,7 +48,17 @@
         android:id="@+id/navigation_home"
         android:name="fpt.edu.vn.assigment_travelapp.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_navigation_home_to_searchFragment"
+            app:destination="@id/searchFragment" />
+        <action
+            android:id="@+id/action_navigation_home_to_destinationDetailFragment"
+            app:destination="@id/destinationDetailFragment" />
+        <action
+            android:id="@+id/action_navigation_home_to_chooseLocationFragment"
+            app:destination="@id/chooseLocationFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_my_trip"
@@ -61,6 +71,9 @@
         <action
             android:id="@+id/action_navigation_my_trip_to_commentFragment"
             app:destination="@id/commentFragment" />
+        <action
+            android:id="@+id/action_navigation_my_trip_to_bookingDetailFragment"
+            app:destination="@id/bookingDetailFragment" />
     </fragment>
 
     <fragment
@@ -92,5 +105,129 @@
         android:name="fpt.edu.vn.assigment_travelapp.ui.comment.CommentFragment"
         android:label="Comments"
         tools:layout="@layout/fragment_comment" />
+
+    <!-- Booking Flow Fragments -->
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.search.SearchFragment"
+        android:label="Search"
+        tools:layout="@layout/fragment_search">
+        <action
+            android:id="@+id/action_searchFragment_to_filterServiceFragment"
+            app:destination="@id/filterServiceFragment" />
+        <action
+            android:id="@+id/action_searchFragment_to_destinationDetailFragment"
+            app:destination="@id/destinationDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/filterServiceFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.filterservice.FilterServiceFragment"
+        android:label="Filter Service"
+        tools:layout="@layout/fragment_filter_service" />
+
+    <fragment
+        android:id="@+id/destinationDetailFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.destinationdetail.DestinationDetailFragment"
+        android:label="Destination Detail"
+        tools:layout="@layout/fragment_destination_detail">
+        <action
+            android:id="@+id/action_destinationDetailFragment_to_galleryFragment"
+            app:destination="@id/galleryFragment" />
+        <action
+            android:id="@+id/action_destinationDetailFragment_to_formScheduleFragment"
+            app:destination="@id/formScheduleFragment" />
+        <action
+            android:id="@+id/action_destinationDetailFragment_to_shareDestinationFragment"
+            app:destination="@id/shareDestinationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/galleryFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.gallery.GalleryFragment"
+        android:label="Gallery"
+        tools:layout="@layout/fragment_gallery" />
+
+    <fragment
+        android:id="@+id/shareDestinationFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.share.ShareDestinationFragment"
+        android:label="Share Destination"
+        tools:layout="@layout/fragment_share_destination" />
+
+    <fragment
+        android:id="@+id/formScheduleFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.formschedule.FormScheduleFragment"
+        android:label="Form Schedule"
+        tools:layout="@layout/fragment_form_schedule">
+        <action
+            android:id="@+id/action_formScheduleFragment_to_checkoutFragment"
+            app:destination="@id/checkoutFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/checkoutFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.checkout.CheckoutFragment"
+        android:label="Checkout"
+        tools:layout="@layout/fragment_checkout">
+        <action
+            android:id="@+id/action_checkoutFragment_to_paymentMethodFragment"
+            app:destination="@id/paymentMethodFragment" />
+        <action
+            android:id="@+id/action_checkoutFragment_to_paymentCompletedFragment"
+            app:destination="@id/paymentCompletedFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/paymentMethodFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.paymentmethod.PaymentMethodFragment"
+        android:label="Payment Method"
+        tools:layout="@layout/fragment_payment_method">
+        <action
+            android:id="@+id/action_paymentMethodFragment_to_addCardFragment"
+            app:destination="@id/addCardFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addCardFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.addcard.AddCardFragment"
+        android:label="Add New Card"
+        tools:layout="@layout/fragment_add_card" />
+
+    <fragment
+        android:id="@+id/paymentCompletedFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.paymentcompleted.PaymentCompletedFragment"
+        android:label="Payment Completed"
+        tools:layout="@layout/fragment_payment_completed">
+        <action
+            android:id="@+id/action_paymentCompletedFragment_to_navigation_my_trip"
+            app:destination="@id/navigation_my_trip"
+            app:popUpTo="@id/navigation_my_trip"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/chooseLocationFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.chooselocation.ChooseLocationFragment"
+        android:label="Choose Location"
+        tools:layout="@layout/fragment_choose_location" />
+
+    <fragment
+        android:id="@+id/nearbyDestinationsFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.nearbydestinations.NearbyDestinationsFragment"
+        android:label="Nearby Destinations"
+        tools:layout="@layout/fragment_nearby_destinations">
+        <action
+            android:id="@+id/action_nearbyDestinationsFragment_to_filterServiceFragment"
+            app:destination="@id/filterServiceFragment" />
+        <action
+            android:id="@+id/action_nearbyDestinationsFragment_to_destinationDetailFragment"
+            app:destination="@id/destinationDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/bookingDetailFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.bookingdetail.BookingDetailFragment"
+        android:label="Booking Detail"
+        tools:layout="@layout/fragment_booking_detail" />
 
 </navigation>

@@ -4,42 +4,47 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import fpt.edu.vn.assigment_travelapp.R;
-import fpt.edu.vn.assigment_travelapp.adapter.PostAdapter;
-import fpt.edu.vn.assigment_travelapp.data.model.Post;
-import fpt.edu.vn.assigment_travelapp.data.model.PostWithUser;
+import fpt.edu.vn.assigment_travelapp.adapter.BookingAdapter;
+import fpt.edu.vn.assigment_travelapp.data.model.Booking;
+import fpt.edu.vn.assigment_travelapp.data.model.Destination;
+import fpt.edu.vn.assigment_travelapp.data.repository.BookingRepository;
+import fpt.edu.vn.assigment_travelapp.data.repository.DestinationRepository;
 import fpt.edu.vn.assigment_travelapp.databinding.FragmentMyTripBinding;
-import fpt.edu.vn.assigment_travelapp.ui.mytrip.MyTripViewModel;
 
-public class MyTripFragment extends Fragment implements PostAdapter.OnPostActionListener {
+public class MyTripFragment extends Fragment {
 
     private FragmentMyTripBinding binding;
-    private MyTripViewModel viewModel;
-    private PostAdapter postAdapter;
-    private List<PostWithUser> postList = new ArrayList<>();
+    private BookingAdapter bookingAdapter;
+    private List<Booking> bookings = new ArrayList<>();
+    private List<Destination> destinations = new ArrayList<>();
     private FirebaseUser currentUser;
+    private BookingRepository bookingRepository;
+    private DestinationRepository destinationRepository;
 
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentMyTripBinding.inflate(inflater, container, false);
-        viewModel = new ViewModelProvider(this).get(MyTripViewModel.class);
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        bookingRepository = new BookingRepository();
+        destinationRepository = new DestinationRepository();
         return binding.getRoot();
     }
 
@@ -48,103 +53,151 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
         super.onViewCreated(view, savedInstanceState);
 
         setupRecyclerView();
-        observeViewModel();
-
-        binding.fabNewPost.setOnClickListener(v -> {
-            NavHostFragment.findNavController(MyTripFragment.this)
-                    .navigate(R.id.action_navigation_my_trip_to_newPostFragment);
-        });
+        loadBookings();
 
         binding.swipeRefreshLayout.setOnRefreshListener(() -> {
-            viewModel.fetchAllPosts();
+            loadBookings();
         });
+    }
 
-        viewModel.fetchAllPosts();
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Reload bookings when returning to this fragment (e.g., after payment completed)
+        loadBookings();
     }
 
     private void setupRecyclerView() {
-        postAdapter = new PostAdapter(postList, currentUser != null ? currentUser.getUid() : "");
-        postAdapter.setOnPostActionListener(this);
-        binding.recyclerViewPosts.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.recyclerViewPosts.setAdapter(postAdapter);
-    }
-
-    private void observeViewModel() {
-        viewModel.getPostFetchState().observe(getViewLifecycleOwner(), state -> {
-            switch (state.getStatus()) {
-                case LOADING:
-                    binding.progressBar.setVisibility(View.VISIBLE);
-                    binding.recyclerViewPosts.setVisibility(View.GONE);
-                    binding.swipeRefreshLayout.setRefreshing(false);
-                    break;
-                case SUCCESS:
-                    binding.progressBar.setVisibility(View.GONE);
-                    binding.recyclerViewPosts.setVisibility(View.VISIBLE);
-                    binding.swipeRefreshLayout.setRefreshing(false);
-                    postList.clear();
-                    postList.addAll(state.getPosts());
-                    postAdapter.notifyDataSetChanged();
-                    break;
-                case ERROR:
-                    binding.progressBar.setVisibility(View.GONE);
-                    binding.swipeRefreshLayout.setRefreshing(false);
-                    Toast.makeText(getContext(), "Error: " + state.getErrorMessage(), Toast.LENGTH_SHORT).show();
-                    break;
+        bookingAdapter = new BookingAdapter(bookings, destinations, new BookingAdapter.OnBookingClickListener() {
+            @Override
+            public void onBookingClick(Booking booking, Destination destination) {
+                // Navigate to booking detail
+                Bundle bundle = new Bundle();
+                bundle.putString("bookingId", booking.getBookingId());
+                Navigation.findNavController(binding.getRoot())
+                        .navigate(R.id.action_navigation_my_trip_to_bookingDetailFragment, bundle);
             }
         });
+
+        binding.rvBookings.setLayoutManager(new LinearLayoutManager(getContext()));
+        binding.rvBookings.setAdapter(bookingAdapter);
+    }
+
+    private void loadBookings() {
+        if (currentUser == null) {
+            // No user logged in, show empty state
+            bookings.clear();
+            destinations.clear();
+            bookingAdapter.updateBookings(bookings, destinations);
+            binding.layoutEmptyState.setVisibility(View.VISIBLE);
+            binding.rvBookings.setVisibility(View.GONE);
+            binding.swipeRefreshLayout.setRefreshing(false);
+            return;
+        }
+
+        // Load bookings from Firebase for current user
+        bookingRepository.getUserBookings(currentUser.getUid(), new BookingRepository.OnGetBookingsCompleteListener() {
+            @Override
+            public void onSuccess(List<Booking> fetchedBookings) {
+                bookings.clear();
+                bookings.addAll(fetchedBookings);
+
+                // Load destinations for all bookings
+                loadDestinationsForBookings(bookings);
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                android.widget.Toast.makeText(getContext(), 
+                        "Failed to load bookings: " + errorMessage, 
+                        android.widget.Toast.LENGTH_SHORT).show();
+                
+                // Show empty state on error
+                bookings.clear();
+                destinations.clear();
+                bookingAdapter.updateBookings(bookings, destinations);
+                binding.layoutEmptyState.setVisibility(View.VISIBLE);
+                binding.rvBookings.setVisibility(View.GONE);
+                binding.swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
+
+    private void loadDestinationsForBookings(List<Booking> bookings) {
+        destinations.clear();
+        
+        if (bookings.isEmpty()) {
+            bookingAdapter.updateBookings(bookings, destinations);
+            binding.layoutEmptyState.setVisibility(View.VISIBLE);
+            binding.rvBookings.setVisibility(View.GONE);
+            binding.swipeRefreshLayout.setRefreshing(false);
+            return;
+        }
+
+        // Load all unique destinations
+        java.util.Set<String> destinationIds = new java.util.HashSet<>();
+        for (Booking booking : bookings) {
+            if (booking.getDestinationId() != null && !booking.getDestinationId().isEmpty()) {
+                destinationIds.add(booking.getDestinationId());
+            }
+        }
+
+        if (destinationIds.isEmpty()) {
+            bookingAdapter.updateBookings(bookings, destinations);
+            binding.layoutEmptyState.setVisibility(View.GONE);
+            binding.rvBookings.setVisibility(View.VISIBLE);
+            binding.swipeRefreshLayout.setRefreshing(false);
+            return;
+        }
+
+        // Load each destination
+        int[] loadedCount = {0};
+        int totalCount = destinationIds.size();
+
+        for (String destinationId : destinationIds) {
+            destinationRepository.getDestinationById(destinationId, new DestinationRepository.OnGetDestinationCompleteListener() {
+                @Override
+                public void onSuccess(Destination fetchedDestination) {
+                    if (fetchedDestination != null && !destinations.contains(fetchedDestination)) {
+                        destinations.add(fetchedDestination);
+                    }
+                    loadedCount[0]++;
+                    if (loadedCount[0] == totalCount) {
+                        // All destinations loaded, update adapter
+                        bookingAdapter.updateBookings(bookings, destinations);
+                        
+                        // Show/hide empty state
+                        if (bookings.isEmpty()) {
+                            binding.layoutEmptyState.setVisibility(View.VISIBLE);
+                            binding.rvBookings.setVisibility(View.GONE);
+                        } else {
+                            binding.layoutEmptyState.setVisibility(View.GONE);
+                            binding.rvBookings.setVisibility(View.VISIBLE);
+                        }
+
+                        binding.swipeRefreshLayout.setRefreshing(false);
+                    }
+                }
+
+                @Override
+                public void onFailure(String errorMessage) {
+                    android.util.Log.e("MyTripFragment", "Failed to load destination " + destinationId + ": " + errorMessage);
+                    loadedCount[0]++;
+                    if (loadedCount[0] == totalCount) {
+                        // Continue even if some destinations failed to load
+                        bookingAdapter.updateBookings(bookings, destinations);
+                        binding.layoutEmptyState.setVisibility(View.GONE);
+                        binding.rvBookings.setVisibility(View.VISIBLE);
+                        binding.swipeRefreshLayout.setRefreshing(false);
+                    }
+                }
+            });
+        }
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
-    }
-
-    @Override
-    public void onLikeClick(int position) {
-        if (currentUser != null) {
-            PostWithUser postWithUser = postList.get(position);
-            Post post = postWithUser.getPost();
-            String userId = currentUser.getUid();
-
-            Map<String, Boolean> likes = post.getLikes();
-            if (likes.containsKey(userId)) {
-                likes.remove(userId);
-            } else {
-                likes.put(userId, true);
-            }
-            postAdapter.notifyItemChanged(position);
-
-            viewModel.toggleLike(post.getPostId(), userId);
-        }
-    }
-
-    @Override
-    public void onSaveClick(int position) {
-        if (currentUser != null) {
-            PostWithUser postWithUser = postList.get(position);
-            Post post = postWithUser.getPost();
-            String userId = currentUser.getUid();
-
-            Map<String, Boolean> bookmarks = post.getBookmarks();
-            if (bookmarks.containsKey(userId)) {
-                bookmarks.remove(userId);
-            } else {
-                bookmarks.put(userId, true);
-            }
-            postAdapter.notifyItemChanged(position);
-
-            viewModel.toggleBookmark(post.getPostId(), userId);
-        }
-    }
-
-    @Override
-    public void onCommentClick(int position) {
-        PostWithUser postWithUser = postList.get(position);
-        String postId = postWithUser.getPost().getPostId();
-        Bundle bundle = new Bundle();
-        bundle.putString("postId", postId);
-        NavHostFragment.findNavController(MyTripFragment.this)
-                .navigate(R.id.action_navigation_my_trip_to_commentFragment, bundle);
     }
 }

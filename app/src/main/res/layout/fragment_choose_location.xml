@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Back Button -->
+            <ImageButton
+                android:id="@+id/btn_back"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_revert"
+                android:background="@drawable/image_placeholder"
+                android:backgroundTint="#F5F5F5"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Title -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Choose your location."
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Description -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Let's find your unforgettable event. Choose a location below to get started."
+                android:textSize="14sp"
+                android:textColor="#757575"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Search Bar -->
+            <LinearLayout
+                android:id="@+id/search_bar"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:background="@drawable/image_placeholder"
+                android:backgroundTint="#F5F5F5"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="2dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/ic_menu_search"
+                    android:tint="#757575" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Search location"
+                    android:textSize="16sp"
+                    android:textColor="#757575"
+                    android:layout_marginStart="12dp" />
+            </LinearLayout>
+
+            <!-- Set Location on Map Button -->
+            <Button
+                android:id="@+id/btn_set_location_map"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Set Location on Map"
+                android:textSize="16sp"
+                android:textColor="@color/green_brand"
+                android:backgroundTint="@color/white"
+                android:drawableStart="@android:drawable/ic_menu_mylocation"
+                android:drawableTint="@color/green_brand"
+                android:drawablePadding="12dp"
+                android:layout_marginBottom="24dp"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
+
+            <!-- Current Location Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Current Location"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Map Container (Placeholder - sẽ thay bằng Google Maps) -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <FrameLayout
+                    android:id="@+id/map_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <!-- Placeholder map image -->
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:background="@drawable/image_placeholder"
+                        android:contentDescription="Map view"
+                        tools:ignore="ContentDescription" />
+
+                    <!-- Map Marker -->
+                    <ImageView
+                        android:id="@+id/iv_map_marker"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:src="@android:drawable/ic_menu_mylocation"
+                        android:tint="@color/green_brand"
+                        android:background="@drawable/image_placeholder"
+                        android:backgroundTint="@color/white" />
+
+                    <!-- Location Label -->
+                    <TextView
+                        android:id="@+id/tv_location_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal|bottom"
+                        android:layout_marginBottom="60dp"
+                        android:text="Beverly rd"
+                        android:textSize="14sp"
+                        android:textColor="@color/white"
+                        android:background="@drawable/image_placeholder"
+                        android:backgroundTint="@color/green_brand"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="6dp"
+                        android:paddingBottom="6dp" />
+                </FrameLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Action Button -->
+    <Button
+        android:id="@+id/btn_use_current_location"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Use Current Location"
+        android:textSize="18sp"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/green_brand"
+        android:padding="16dp"
+        app:layout_anchor="@id/btn_use_current_location"
+        app:layout_anchorGravity="bottom" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
