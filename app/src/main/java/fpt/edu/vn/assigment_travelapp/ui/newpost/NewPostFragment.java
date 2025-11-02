@@ -4,11 +4,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +24,10 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -35,14 +41,16 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import fpt.edu.vn.assigment_travelapp.R;
-import fpt.edu.vn.assigment_travelapp.data.model.Post;
 import fpt.edu.vn.assigment_travelapp.data.model.User;
 import fpt.edu.vn.assigment_travelapp.databinding.FragmentNewPostBinding;
+import fpt.edu.vn.assigment_travelapp.ui.profile.ProfileViewModel;
 
 public class NewPostFragment extends Fragment {
 
+    private static final String TAG = "NewPostFragment";
     private FragmentNewPostBinding binding;
     private NewPostViewModel viewModel;
+    private ProfileViewModel profileViewModel;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
 
@@ -54,6 +62,7 @@ public class NewPostFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(this).get(NewPostViewModel.class);
+        profileViewModel = new ViewModelProvider(requireActivity()).get(ProfileViewModel.class);
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference();
 
@@ -141,6 +150,7 @@ public class NewPostFragment extends Fragment {
                     binding.progressBar.setVisibility(View.GONE);
                     binding.btnShare.setEnabled(true);
                     Toast.makeText(getContext(), "Post shared successfully!", Toast.LENGTH_SHORT).show();
+                    profileViewModel.refreshData();
                     if (getActivity() != null) {
                         getActivity().onBackPressed();
                     }
@@ -168,14 +178,38 @@ public class NewPostFragment extends Fragment {
 
     private void loadUserAvatar() {
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null && getContext() != null) {
+        if (currentUser != null) {
             mDatabase.child("users").child(currentUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    User user = snapshot.getValue(User.class);
-                    if (user != null && getContext() != null) {
-                        if (user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
-                            Glide.with(getContext()).load(user.getPhotoUrl()).into(binding.ivAvatar);
+                    if (isAdded()) { // Check if fragment is still added
+                        User user = snapshot.getValue(User.class);
+                        if (user != null && user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
+                            String photoData = user.getPhotoUrl();
+                            if (photoData.startsWith("http://") || photoData.startsWith("https://")) {
+                                Glide.with(requireContext())
+                                        .load(photoData)
+                                        .listener(createGlideListener())
+                                        .into(binding.ivAvatar);
+                            } else {
+                                try {
+                                    byte[] decodedString;
+                                    int commaIndex = photoData.indexOf(',');
+                                    if (commaIndex != -1) {
+                                        String base64part = photoData.substring(commaIndex + 1);
+                                        decodedString = Base64.decode(base64part, Base64.DEFAULT);
+                                    } else {
+                                        decodedString = Base64.decode(photoData, Base64.DEFAULT);
+                                    }
+                                    Glide.with(requireContext())
+                                            .load(decodedString)
+                                            .listener(createGlideListener())
+                                            .into(binding.ivAvatar);
+                                } catch (IllegalArgumentException e) {
+                                    Log.e(TAG, "Invalid Base64 string for avatar", e);
+                                    binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+                                }
+                            }
                         } else {
                             binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar);
                         }
@@ -184,11 +218,34 @@ public class NewPostFragment extends Fragment {
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(getContext(), "Failed to load user image.", Toast.LENGTH_SHORT).show();
+                    if (isAdded()) {
+                        Log.e(TAG, "Firebase onCancelled", error.toException());
+                        Toast.makeText(getContext(), "Failed to load user data.", Toast.LENGTH_SHORT).show();
+                    }
                 }
             });
         }
     }
+
+    private RequestListener<Drawable> createGlideListener() {
+        return new RequestListener<Drawable>() {
+            @Override
+            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                if (isAdded()) {
+                    Log.e(TAG, "Glide load failed", e);
+                    Toast.makeText(getContext(), "Failed to load user avatar.", Toast.LENGTH_SHORT).show();
+                    binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+                }
+                return false;
+            }
+
+            @Override
+            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                return false;
+            }
+        };
+    }
+
 
     private void sharePost() {
         String caption = binding.etCaption.getText().toString().trim();

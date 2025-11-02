@@ -94,7 +94,7 @@ public class SignUpFragment extends Fragment {
                     if (firebaseUser != null) {
                         String uid = firebaseUser.getUid();
                         String name = firstName + " " + lastName;
-                        User newUser = new User(name, email, ""); // photoUrl is empty
+                        User newUser = new User(uid, name, email, ""); // photoUrl is empty
 
                         // Step 2: Save user info to Realtime DB with UID as key
                         userRepository.saveUser(uid, newUser).addOnCompleteListener(dbTask -> {

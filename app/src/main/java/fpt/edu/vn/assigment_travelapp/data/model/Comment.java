@@ -1,6 +1,9 @@
 package fpt.edu.vn.assigment_travelapp.data.model;
 
-public class Comment {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Comment implements Parcelable {
     private String commentId;
     private String postId;
     private String userId;
@@ -20,6 +23,27 @@ public class Comment {
         this.timestamp = timestamp;
         this.parentCommentId = parentCommentId;
     }
+
+    protected Comment(Parcel in) {
+        commentId = in.readString();
+        postId = in.readString();
+        userId = in.readString();
+        text = in.readString();
+        timestamp = in.readLong();
+        parentCommentId = in.readString();
+    }
+
+    public static final Creator<Comment> CREATOR = new Creator<Comment>() {
+        @Override
+        public Comment createFromParcel(Parcel in) {
+            return new Comment(in);
+        }
+
+        @Override
+        public Comment[] newArray(int size) {
+            return new Comment[size];
+        }
+    };
 
     // Getters and Setters
     public String getCommentId() {
@@ -68,5 +92,20 @@ public class Comment {
 
     public void setParentCommentId(String parentCommentId) {
         this.parentCommentId = parentCommentId;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(commentId);
+        dest.writeString(postId);
+        dest.writeString(userId);
+        dest.writeString(text);
+        dest.writeLong(timestamp);
+        dest.writeString(parentCommentId);
     }
 }

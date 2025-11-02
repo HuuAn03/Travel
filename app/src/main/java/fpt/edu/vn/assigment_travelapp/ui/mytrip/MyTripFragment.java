@@ -35,7 +35,6 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
     private PostAdapter postAdapter;
     private List<PostWithUser> postList = new ArrayList<>();
     private FirebaseUser currentUser;
-    private User appUser;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -61,14 +60,11 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
             viewModel.fetchAllPosts();
         });
 
-        if (currentUser != null) {
-            viewModel.getUser(currentUser.getUid());
-        }
         viewModel.fetchAllPosts();
     }
 
     private void setupRecyclerView() {
-        postAdapter = new PostAdapter(postList, currentUser != null ? currentUser.getUid() : "", appUser);
+        postAdapter = new PostAdapter(postList, currentUser != null ? currentUser.getUid() : "", null);
         postAdapter.setOnPostActionListener(this);
         binding.recyclerViewPosts.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerViewPosts.setAdapter(postAdapter);
@@ -100,10 +96,7 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
 
         viewModel.getUser().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
-                appUser = user;
-                postAdapter = new PostAdapter(postList, currentUser != null ? currentUser.getUid() : "", appUser);
-                postAdapter.setOnPostActionListener(this);
-                binding.recyclerViewPosts.setAdapter(postAdapter);
+                postAdapter.setCurrentUser(user);
             }
         });
     }

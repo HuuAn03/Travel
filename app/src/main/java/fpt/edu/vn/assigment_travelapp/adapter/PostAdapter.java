@@ -33,7 +33,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
     private final List<PostWithUser> postList;
     private final String currentUserId;
-    private final User currentUser;
+    private User currentUser;
     private OnPostActionListener listener;
 
     public interface OnPostActionListener {
@@ -52,6 +52,11 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         this.postList = postList;
         this.currentUserId = currentUserId;
         this.currentUser = currentUser;
+    }
+
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -143,7 +148,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             Post post = postWithUser.getPost();
             User user = postWithUser.getUser();
 
-            if (post == null || user == null) return;
+            if (post == null || user == null || user.getUserId() == null) return;
 
             tvUsername.setText(user.getName() != null ? user.getName() : "Unknown User");
 
@@ -159,8 +164,35 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 ivPostImage.setImageResource(R.drawable.image_placeholder);
             }
 
-            if (!TextUtils.isEmpty(user.getPhotoUrl())) {
-                Glide.with(itemView.getContext()).load(user.getPhotoUrl()).into(ivAvatar);
+            // Determine which user object and photo URL to use
+            String photoUrl = null;
+            if (user.getUserId().equals(currentUserId) && currentUser != null) {
+                photoUrl = currentUser.getPhotoUrl();
+            } else {
+                photoUrl = user.getPhotoUrl();
+            }
+
+            // Load avatar image - handles both URL and Base64
+            if (!TextUtils.isEmpty(photoUrl)) {
+                if (photoUrl.startsWith("http")) {
+                    Glide.with(itemView.getContext())
+                            .load(photoUrl)
+                            .placeholder(R.drawable.ic_default_avatar)
+                            .error(R.drawable.ic_default_avatar)
+                            .into(ivAvatar);
+                } else {
+                    try {
+                        byte[] imageBytes = Base64.decode(photoUrl, Base64.DEFAULT);
+                        Glide.with(itemView.getContext())
+                                .asBitmap()
+                                .load(imageBytes)
+                                .placeholder(R.drawable.ic_default_avatar)
+                                .error(R.drawable.ic_default_avatar)
+                                .into(ivAvatar);
+                    } catch (Exception e) {
+                        ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+                    }
+                }
             } else {
                 ivAvatar.setImageResource(R.drawable.ic_default_avatar);
             }
@@ -200,7 +232,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 return;
             }
             textView.setVisibility(View.VISIBLE);
-            textView.setText(text); // Set full text first
+            textView.setText(text);
             textView.post(() -> {
                 final int maxLines = 2;
                 if (textView.getLineCount() > maxLines) {
@@ -226,7 +258,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     spannableString.setSpan(clickableSpan, textToShow.length() - seeMore.length(), textToShow.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     textView.setText(spannableString);
                     textView.setMovementMethod(LinkMovementMethod.getInstance());
-                    textView.setMaxLines(maxLines); // Set max lines after setting the spannable
+                    textView.setMaxLines(maxLines);
                 }
             });
         }

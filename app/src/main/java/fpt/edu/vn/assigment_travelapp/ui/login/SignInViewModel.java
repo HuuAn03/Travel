@@ -71,7 +71,7 @@ public class SignInViewModel extends ViewModel {
                                     String name = firebaseUser.getDisplayName();
                                     String email = firebaseUser.getEmail();
                                     String photoUrl = (firebaseUser.getPhotoUrl() != null) ? firebaseUser.getPhotoUrl().toString() : "";
-                                    User newUser = new User(name, email, photoUrl); // role is "user" by default
+                                    User newUser = new User(firebaseUser.getUid(), name, email, photoUrl); // role is "user" by default
                                     saveUserToDatabase(firebaseUser.getUid(), newUser);
                                 } else {
                                     _errorMessage.setValue(errorMessage);

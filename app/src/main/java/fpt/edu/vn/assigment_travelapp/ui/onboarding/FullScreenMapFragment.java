@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
@@ -91,12 +92,14 @@ public class FullScreenMapFragment extends Fragment {
     public void onResume() {
         super.onResume();
         map.onResume();
+        ((AppCompatActivity) getActivity()).getSupportActionBar().hide();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         map.onPause();
+        ((AppCompatActivity) getActivity()).getSupportActionBar().show();
     }
 
     @Override
