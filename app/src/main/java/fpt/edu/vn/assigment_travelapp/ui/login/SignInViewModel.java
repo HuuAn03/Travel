@@ -34,7 +34,12 @@ public class SignInViewModel extends ViewModel {
         mAuth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
-                    _signInSuccess.setValue(true);
+                    FirebaseUser firebaseUser = mAuth.getCurrentUser();
+                    if (firebaseUser != null) {
+                        fetchUserData(firebaseUser.getUid());
+                    } else {
+                         _signInSuccess.setValue(true); // Should not happen
+                    }
                 } else {
                     if (task.getException() != null) {
                         _errorMessage.setValue(task.getException().getMessage());
@@ -52,17 +57,31 @@ public class SignInViewModel extends ViewModel {
                 if (task.isSuccessful()) {
                     FirebaseUser firebaseUser = mAuth.getCurrentUser();
                     if (firebaseUser != null) {
-                        // User already exists or is new, save their info to Realtime DB with UID as key
-                        String uid = firebaseUser.getUid();
-                        String name = firebaseUser.getDisplayName();
-                        String email = firebaseUser.getEmail();
-                        String photoUrl = (firebaseUser.getPhotoUrl() != null) ? firebaseUser.getPhotoUrl().toString() : "";
+                        userRepository.getUser(firebaseUser.getUid(), new IUserRepository.OnGetUserCompleteListener() {
+                            @Override
+                            public void onSuccess(User user) {
+                                // User exists, login successful
+                                _signInSuccess.setValue(true);
+                            }
 
-                        User user = new User(name, email, photoUrl);
-                        saveUserToDatabase(uid, user);
+                            @Override
+                            public void onFailure(String errorMessage) {
+                                if ("User not found".equals(errorMessage)) {
+                                    // User is new, save their info to Realtime DB
+                                    String name = firebaseUser.getDisplayName();
+                                    String email = firebaseUser.getEmail();
+                                    String photoUrl = (firebaseUser.getPhotoUrl() != null) ? firebaseUser.getPhotoUrl().toString() : "";
+                                    User newUser = new User(name, email, photoUrl); // role is "user" by default
+                                    saveUserToDatabase(firebaseUser.getUid(), newUser);
+                                } else {
+                                    _errorMessage.setValue(errorMessage);
+                                    _signInSuccess.setValue(false);
+                                }
+                            }
+                        });
+                    } else {
+                        _signInSuccess.setValue(true); // Should not happen
                     }
-                     // Always set success to true to navigate, saving data is a background task
-                    _signInSuccess.setValue(true);
                 } else {
                     if (task.getException() != null) {
                         _errorMessage.setValue(task.getException().getMessage());
@@ -74,15 +93,32 @@ public class SignInViewModel extends ViewModel {
             });
     }
 
+    private void fetchUserData(String uid) {
+        userRepository.getUser(uid, new IUserRepository.OnGetUserCompleteListener() {
+            @Override
+            public void onSuccess(User user) {
+                // User data is fetched, login is successful
+                _signInSuccess.setValue(true);
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                _errorMessage.setValue(errorMessage);
+                _signInSuccess.setValue(false);
+            }
+        });
+    }
+
     private void saveUserToDatabase(String uid, User user) {
         userRepository.saveUser(uid, user)
             .addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     Log.d(TAG, "User data saved to database.");
+                    _signInSuccess.setValue(true);
                 } else {
                     Log.w(TAG, "Failed to save user data.", task.getException());
-                    // Optional: You might want to inform the user, but since they are logged in,
-                    // it might not be a critical failure.
+                    _errorMessage.setValue("Failed to save user data.");
+                    _signInSuccess.setValue(false);
                 }
             });
     }

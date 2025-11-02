@@ -11,7 +11,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import fpt.edu.vn.assigment_travelapp.data.model.Comment;
@@ -165,5 +167,43 @@ public class PostRepository implements IPostRepository {
                 listener.onFailure(error.getMessage());
             }
         });
+    }
+
+    @Override
+    public void deletePost(String postId, OnDeletePostCompleteListener listener) {
+        mDatabase.child("posts").child(postId).removeValue()
+                .addOnSuccessListener(aVoid -> listener.onSuccess())
+                .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
+    }
+
+    @Override
+    public void getPost(String postId, OnGetPostCompleteListener listener) {
+        mDatabase.child("posts").child(postId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Post post = snapshot.getValue(Post.class);
+                if (post != null) {
+                    listener.onSuccess(post);
+                } else {
+                    listener.onFailure("Post not found");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                listener.onFailure(error.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public void updatePost(String postId, String base64Image, String caption, OnPostUpdateCompleteListener listener) {
+        Map<String, Object> postUpdates = new HashMap<>();
+        postUpdates.put("imageUrl", base64Image);
+        postUpdates.put("caption", caption);
+
+        mDatabase.child("posts").child(postId).updateChildren(postUpdates)
+                .addOnSuccessListener(aVoid -> listener.onSuccess())
+                .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
     }
 }

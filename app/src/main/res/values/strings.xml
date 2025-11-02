@@ -4,4 +4,11 @@
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
     <string name="title_discover">Discover</string>
+    <string name="choose_your_location">Choose your location</string>
+    <string name="choose_location_subtitle">Lets find your unforgettable event. Choose a location below to get started.</string>
+    <string name="search_location">Search location</string>
+    <string name="set_location_on_map">Set Location on Map</string>
+    <string name="current_location">Current Location</string>
+    <string name="use_current_location">Use Current Location</string>
+    <string name="back_button_description">Back</string>
 </resources>

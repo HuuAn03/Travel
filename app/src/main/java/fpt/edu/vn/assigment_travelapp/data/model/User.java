@@ -4,6 +4,8 @@ public class User {
     private String name;
     private String email;
     private String photoUrl;
+    private String role;
+    private String location;
 
     // Firebase needs a public no-argument constructor
     public User() {
@@ -13,6 +15,14 @@ public class User {
         this.name = name;
         this.email = email;
         this.photoUrl = photoUrl;
+        this.role = "user";
+    }
+
+    public User(String name, String email, String photoUrl, String role) {
+        this.name = name;
+        this.email = email;
+        this.photoUrl = photoUrl;
+        this.role = role;
     }
 
     public String getName() {
@@ -37,5 +47,21 @@ public class User {
 
     public void setPhotoUrl(String photoUrl) {
         this.photoUrl = photoUrl;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 }

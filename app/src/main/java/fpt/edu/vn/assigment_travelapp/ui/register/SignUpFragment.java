@@ -104,7 +104,7 @@ public class SignUpFragment extends Fragment {
                                     Toast.makeText(requireContext(), "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
                                     new Handler(Looper.getMainLooper()).postDelayed(() -> {
                                         if (isAdded()) {
-                                            navController.navigate(R.id.action_signUpFragment_to_signInFragment);
+                                            navController.navigate(R.id.action_signUpFragment_to_chooseLocationFragment);
                                         }
                                     }, 1000);
                                 } else {

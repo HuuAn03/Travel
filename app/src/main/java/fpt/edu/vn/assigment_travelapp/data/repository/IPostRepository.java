@@ -4,6 +4,7 @@ import java.util.List;
 
 import fpt.edu.vn.assigment_travelapp.data.model.Comment;
 import fpt.edu.vn.assigment_travelapp.data.model.CommentWithUser;
+import fpt.edu.vn.assigment_travelapp.data.model.Post;
 import fpt.edu.vn.assigment_travelapp.data.model.PostWithUser;
 
 public interface IPostRepository {
@@ -11,6 +12,9 @@ public interface IPostRepository {
     void getAllPosts(OnGetAllPostsCompleteListener listener);
     void addComment(String postId, Comment comment, OnCommentAddCompleteListener listener);
     void getCommentsWithUsers(String postId, OnGetCommentsWithUsersCompleteListener listener);
+    void deletePost(String postId, OnDeletePostCompleteListener listener);
+    void getPost(String postId, OnGetPostCompleteListener listener);
+    void updatePost(String postId, String base64Image, String caption, OnPostUpdateCompleteListener listener);
 
     interface OnPostCreationCompleteListener {
         void onSuccess();
@@ -29,6 +33,21 @@ public interface IPostRepository {
 
     interface OnGetCommentsWithUsersCompleteListener {
         void onSuccess(List<CommentWithUser> comments);
+        void onFailure(String errorMessage);
+    }
+
+    interface OnDeletePostCompleteListener {
+        void onSuccess();
+        void onFailure(String errorMessage);
+    }
+
+    interface OnGetPostCompleteListener {
+        void onSuccess(Post post);
+        void onFailure(String errorMessage);
+    }
+
+    interface OnPostUpdateCompleteListener {
+        void onSuccess();
         void onFailure(String errorMessage);
     }
 }

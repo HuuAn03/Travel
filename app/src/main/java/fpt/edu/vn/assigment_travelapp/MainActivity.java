@@ -1,6 +1,7 @@
 package fpt.edu.vn.assigment_travelapp;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,10 +19,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
-// Xóa 2 import không cần thiết
-// import com.google.firebase.database.DatabaseReference;
-// import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
+import fpt.edu.vn.assigment_travelapp.data.model.User;
 import fpt.edu.vn.assigment_travelapp.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         mAuth = FirebaseAuth.getInstance();
+        createAdminUserIfNeeded();
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -78,7 +81,47 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // [ĐÃ XÓA] Toàn bộ hàm saveUserToDatabase() đã được xóa
+    private void createAdminUserIfNeeded() {
+        String adminEmail = "admin@travel.com";
+        String adminPassword = "123456";
+        String adminName = "Admin";
+
+        mAuth.fetchSignInMethodsForEmail(adminEmail).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                boolean isNewUser = task.getResult().getSignInMethods().isEmpty();
+                if (isNewUser) {
+                    mAuth.createUserWithEmailAndPassword(adminEmail, adminPassword)
+                            .addOnCompleteListener(authTask -> {
+                                if (authTask.isSuccessful()) {
+                                    FirebaseUser firebaseUser = mAuth.getCurrentUser();
+                                    if (firebaseUser != null) {
+                                        String uid = firebaseUser.getUid();
+                                        User newUser = new User(adminName, adminEmail, "", "admin");
+
+                                        DatabaseReference databaseReference = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference();
+                                        databaseReference.child("users").child(uid).setValue(newUser)
+                                                .addOnCompleteListener(dbTask -> {
+                                                    if (dbTask.isSuccessful()) {
+                                                        Log.d("MainActivity", "Admin user created and saved successfully.");
+                                                    } else {
+                                                        Log.e("MainActivity", "Failed to save admin user data.", dbTask.getException());
+                                                    }
+                                                });
+                                        mAuth.signOut();
+                                    }
+                                } else {
+                                    Log.e("MainActivity", "Failed to create admin user in Auth.", authTask.getException());
+                                }
+                            });
+                } else {
+                    Log.d("MainActivity", "Admin user already exists.");
+                }
+            } else {
+                Log.e("MainActivity", "Error fetching sign-in methods.", task.getException());
+            }
+        });
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -100,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
         mAuth.signOut();
         mGoogleSignInClient.signOut().addOnCompleteListener(this, task -> {
             NavOptions navOptions = new NavOptions.Builder()
-                    .setPopUpTo(R.id.mobile_navigation, true) // Đã sửa R.id.nav_host_fragment_activity_main thành R.id.mobile_navigation
+                    .setPopUpTo(R.id.mobile_navigation, true)
                     .build();
             navController.navigate(R.id.signInFragment, null, navOptions);
         });

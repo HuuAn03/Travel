@@ -33,21 +33,25 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
     private final List<PostWithUser> postList;
     private final String currentUserId;
+    private final User currentUser;
     private OnPostActionListener listener;
 
     public interface OnPostActionListener {
         void onLikeClick(int position);
         void onSaveClick(int position);
         void onCommentClick(int position);
+        void onEditClick(int position);
+        void onDeleteClick(int position);
     }
 
     public void setOnPostActionListener(OnPostActionListener listener) {
         this.listener = listener;
     }
 
-    public PostAdapter(List<PostWithUser> postList, String currentUserId) {
+    public PostAdapter(List<PostWithUser> postList, String currentUserId, User currentUser) {
         this.postList = postList;
         this.currentUserId = currentUserId;
+        this.currentUser = currentUser;
     }
 
     @NonNull
@@ -79,6 +83,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         private final ImageView saveIcon;
         private final TextView tvPostCaption;
         private final TextView tvPostDate;
+        private final ImageView editIcon;
+        private final ImageView deleteIcon;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -92,6 +98,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             saveIcon = itemView.findViewById(R.id.save_icon);
             tvPostCaption = itemView.findViewById(R.id.post_caption);
             tvPostDate = itemView.findViewById(R.id.post_date);
+            editIcon = itemView.findViewById(R.id.edit_icon);
+            deleteIcon = itemView.findViewById(R.id.delete_icon);
 
             likeIcon.setOnClickListener(v -> {
                 int position = getAdapterPosition();
@@ -111,6 +119,20 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 int position = getAdapterPosition();
                 if (listener != null && position != RecyclerView.NO_POSITION) {
                     listener.onSaveClick(position);
+                }
+            });
+
+            editIcon.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (listener != null && position != RecyclerView.NO_POSITION) {
+                    listener.onEditClick(position);
+                }
+            });
+
+            deleteIcon.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (listener != null && position != RecyclerView.NO_POSITION) {
+                    listener.onDeleteClick(position);
                 }
             });
         }
@@ -157,6 +179,15 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
             int numComments = post.getComments() != null ? post.getComments().size() : 0;
             commentCount.setText(String.valueOf(numComments));
+
+            // Show/hide edit and delete icons
+            if (currentUser != null && ("admin".equals(currentUser.getRole()) || post.getUserId().equals(currentUserId))) {
+                editIcon.setVisibility(View.VISIBLE);
+                deleteIcon.setVisibility(View.VISIBLE);
+            } else {
+                editIcon.setVisibility(View.GONE);
+                deleteIcon.setVisibility(View.GONE);
+            }
         }
 
         private String getRelativeTime(long timestamp) {

@@ -35,6 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import fpt.edu.vn.assigment_travelapp.R;
+import fpt.edu.vn.assigment_travelapp.data.model.Post;
 import fpt.edu.vn.assigment_travelapp.data.model.User;
 import fpt.edu.vn.assigment_travelapp.databinding.FragmentNewPostBinding;
 
@@ -47,6 +48,7 @@ public class NewPostFragment extends Fragment {
 
     private ActivityResultLauncher<Intent> imagePickerLauncher;
     private String base64Image;
+    private String postId;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,6 +56,10 @@ public class NewPostFragment extends Fragment {
         viewModel = new ViewModelProvider(this).get(NewPostViewModel.class);
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference();
+
+        if (getArguments() != null) {
+            postId = getArguments().getString("postId");
+        }
 
         imagePickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -89,8 +95,13 @@ public class NewPostFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        setupTitle();
         loadUserAvatar();
         observeViewModel();
+
+        if (postId != null) {
+            viewModel.getPost(postId);
+        }
 
         binding.ivClose.setOnClickListener(v -> {
             if (getActivity() != null) {
@@ -109,6 +120,14 @@ public class NewPostFragment extends Fragment {
         binding.btnShare.setOnClickListener(v -> {
             sharePost();
         });
+    }
+
+    private void setupTitle() {
+        if (postId != null) {
+            binding.tvToolbarTitle.setText("Edit Post");
+        } else {
+            binding.tvToolbarTitle.setText("New Post");
+        }
     }
 
     private void observeViewModel() {
@@ -131,6 +150,18 @@ public class NewPostFragment extends Fragment {
                     binding.btnShare.setEnabled(true);
                     Toast.makeText(getContext(), "Failed to share post: " + state.getErrorMessage(), Toast.LENGTH_SHORT).show();
                     break;
+            }
+        });
+
+        viewModel.getPost().observe(getViewLifecycleOwner(), post -> {
+            if (post != null) {
+                binding.etCaption.setText(post.getCaption());
+                if (post.getImageUrl() != null) {
+                    base64Image = post.getImageUrl();
+                    byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                    binding.ivPostImage.setImageBitmap(decodedByte);
+                }
             }
         });
     }
@@ -171,7 +202,11 @@ public class NewPostFragment extends Fragment {
             return;
         }
 
-        viewModel.createPost(base64Image, caption);
+        if (postId != null) {
+            viewModel.updatePost(postId, base64Image, caption);
+        } else {
+            viewModel.createPost(base64Image, caption);
+        }
     }
 
     @Override
