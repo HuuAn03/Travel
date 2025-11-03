@@ -93,7 +93,7 @@ public class ProfileViewModel extends ViewModel {
         }
     }
 
-    private void loadUserPosts(String userId) {
+    public void loadUserPosts(String userId) {
         postRepository.getPostsByUserId(userId, new IPostRepository.OnGetPostsCompleteListener() {
             @Override
             public void onSuccess(List<Post> posts) {
@@ -107,7 +107,7 @@ public class ProfileViewModel extends ViewModel {
         });
     }
 
-    private void loadLikedPosts(String userId) {
+    public void loadLikedPosts(String userId) {
         postRepository.getLikedPosts(userId, new IPostRepository.OnGetPostsCompleteListener() {
             @Override
             public void onSuccess(List<Post> posts) {
@@ -121,7 +121,7 @@ public class ProfileViewModel extends ViewModel {
         });
     }
 
-    private void loadBookmarkedPosts(String userId) {
+    public void loadBookmarkedPosts(String userId) {
         postRepository.getBookmarkedPosts(userId, new IPostRepository.OnGetPostsCompleteListener() {
             @Override
             public void onSuccess(List<Post> posts) {

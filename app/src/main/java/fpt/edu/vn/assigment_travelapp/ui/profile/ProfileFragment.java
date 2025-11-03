@@ -51,10 +51,8 @@ public class ProfileFragment extends Fragment {
     private static final String TAG = "ProfileFragment";
     private FragmentProfileBinding binding;
 
-    // ViewModel for posts
     private ProfileViewModel profileViewModel;
 
-    // Original Firebase and UI variables
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener authStateListener;
     private GoogleSignInClient mGoogleSignInClient;
@@ -65,6 +63,7 @@ public class ProfileFragment extends Fragment {
     private ActivityResultLauncher<Intent> bannerImagePickerLauncher;
     private ActivityResultLauncher<Intent> profileImagePickerLauncher;
     private ViewPagerAdapter viewPagerAdapter;
+    private String userId;
 
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -88,15 +87,15 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        profileViewModel.refreshData();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        setupViewPager();
-        setupPostObservers(); // Sets up observers for ViewModel posts
+        if (getArguments() != null) {
+            userId = getArguments().getString("userId");
+        }
 
         bannerImagePickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -118,23 +117,43 @@ public class ProfileFragment extends Fragment {
                 }
         );
 
-        binding.btnChangeBanner.setOnClickListener(v -> openImageChooser(bannerImagePickerLauncher));
-        binding.btnEditProfile.setOnClickListener(v -> showEditBioDialog());
-        binding.ivProfileImage.setOnClickListener(v -> showProfileImageOptions());
+        FirebaseUser fUser = mAuth.getCurrentUser();
+        String currentUserId = (fUser != null) ? fUser.getUid() : null;
 
-        // Restore original auth state listener
-        setupAuthStateListener();
+        boolean isViewingOwnProfile = (userId == null || userId.isEmpty() || userId.equals(currentUserId));
+
+        if (isViewingOwnProfile) {
+            userId = currentUserId;
+            binding.btnChangeBanner.setVisibility(View.VISIBLE);
+            binding.btnEditProfile.setVisibility(View.VISIBLE);
+            binding.ivProfileImage.setOnClickListener(v -> showProfileImageOptions());
+            binding.btnChangeBanner.setOnClickListener(v -> openImageChooser(bannerImagePickerLauncher));
+            binding.btnEditProfile.setOnClickListener(v -> showEditBioDialog());
+        } else {
+            binding.btnChangeBanner.setVisibility(View.GONE);
+            binding.btnEditProfile.setVisibility(View.GONE);
+            binding.ivProfileImage.setOnClickListener(v -> showViewImageDialog());
+        }
+
+        if (userId != null) {
+            loadProfileData(userId);
+            setupViewPager();
+            setupPostObservers();
+        } else {
+            Log.w(TAG, "Not logged in and no user ID to display profile.");
+        }
     }
 
     private void setupViewPager() {
-        viewPagerAdapter = new ViewPagerAdapter(this);
+        viewPagerAdapter = new ViewPagerAdapter(this, userId);
         binding.viewPager.setAdapter(viewPagerAdapter);
 
         new TabLayoutMediator(binding.tabLayout, binding.viewPager,
                 (tab, position) -> {
+                    boolean isViewingOwnProfile = (userId != null && userId.equals(mAuth.getCurrentUser().getUid()));
                     switch (position) {
                         case 0:
-                            tab.setText("My Posts");
+                            tab.setText(isViewingOwnProfile ? "My Posts" : "Posts");
                             break;
                         case 1:
                             tab.setText("Likes");
@@ -146,7 +165,6 @@ public class ProfileFragment extends Fragment {
                 }).attach();
     }
 
-    // Observer for posts from the ViewModel
     private void setupPostObservers() {
         profileViewModel.error.observe(getViewLifecycleOwner(), error -> {
             if (error != null) {
@@ -155,22 +173,7 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    // Restored original setupAuthStateListener
-    private void setupAuthStateListener() {
-        authStateListener = firebaseAuth -> {
-            FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-            if (firebaseUser != null) {
-                loadProfileData(firebaseUser);
-            } else {
-                Log.w(TAG, "AuthStateListener: User is signed out.");
-            }
-        };
-        mAuth.addAuthStateListener(authStateListener);
-    }
-
-    // Restored original loadProfileData, now using UID
-    private void loadProfileData(FirebaseUser firebaseUser) {
-        String uid = firebaseUser.getUid();
+    private void loadProfileData(String uid) {
         currentUserRef = mDatabase.child(uid);
 
         databaseListener = new ValueEventListener() {
@@ -215,7 +218,6 @@ public class ProfileFragment extends Fragment {
         currentUserRef.addValueEventListener(databaseListener);
     }
 
-    // All other original methods remain unchanged
     private void showProfileImageOptions() {
         final CharSequence[] options = {"View Photo", "Change Photo", "Cancel"};
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
@@ -372,7 +374,6 @@ public class ProfileFragment extends Fragment {
         super.onDestroyView();
         binding = null;
 
-        // Restore original cleanup logic
         if (authStateListener != null) {
             mAuth.removeAuthStateListener(authStateListener);
         }

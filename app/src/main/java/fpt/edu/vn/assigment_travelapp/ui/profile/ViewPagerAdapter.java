@@ -6,6 +6,13 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 public class ViewPagerAdapter extends FragmentStateAdapter {
 
+    private String userId;
+
+    public ViewPagerAdapter(@NonNull Fragment fragment, String userId) {
+        super(fragment);
+        this.userId = userId;
+    }
+
     public ViewPagerAdapter(@NonNull Fragment fragment) {
         super(fragment);
     }
@@ -15,14 +22,13 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
     public Fragment createFragment(int position) {
         switch (position) {
             case 0:
-                return MyPostsFragment.newInstance();
+                return MyPostsFragment.newInstance(userId);
             case 1:
-                // Assuming LikesFragment and BookmarksFragment will be updated similarly
-                return LikesFragment.newInstance();
+                return LikesFragment.newInstance(userId);
             case 2:
-                return BookmarksFragment.newInstance();
+                return BookmarksFragment.newInstance(userId);
             default:
-                return MyPostsFragment.newInstance();
+                return MyPostsFragment.newInstance(userId);
         }
     }
 

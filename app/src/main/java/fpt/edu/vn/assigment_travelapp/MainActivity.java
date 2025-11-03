@@ -67,7 +67,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            if (destination.getId() == R.id.splashFragment || destination.getId() == R.id.signInFragment || destination.getId() == R.id.signUpFragment || destination.getId() == R.id.newPostFragment || destination.getId() == R.id.fullScreenMapFragment || destination.getId() == R.id.chooseLocationFragment) {
+            if (destination.getId() == R.id.splashFragment) {
+                 FirebaseUser currentUser = mAuth.getCurrentUser();
+                 if (currentUser != null) {
+                    navController.navigate(R.id.navigation_home);
+                 }
+            } else if (destination.getId() == R.id.signInFragment || destination.getId() == R.id.signUpFragment || destination.getId() == R.id.newPostFragment || destination.getId() == R.id.fullScreenMapFragment || destination.getId() == R.id.chooseLocationFragment) {
                 navView.setVisibility(View.GONE);
                 if (getSupportActionBar() != null) {
                     getSupportActionBar().hide();
@@ -84,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
     private void createAdminUserIfNeeded() {
         String adminEmail = "admin@travel.com";
         String adminPassword = "123456";
-        String adminName = "Admin";
+        String adminName = "admin";
 
         mAuth.fetchSignInMethodsForEmail(adminEmail).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
@@ -96,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                                     FirebaseUser firebaseUser = mAuth.getCurrentUser();
                                     if (firebaseUser != null) {
                                         String uid = firebaseUser.getUid();
-                                        User newUser = new User(adminName, adminEmail, "", "admin");
+                                        User newUser = new User(uid, adminName, adminEmail, "", "admin");
 
                                         DatabaseReference databaseReference = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference();
                                         databaseReference.child("users").child(uid).setValue(newUser)

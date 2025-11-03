@@ -8,6 +8,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -275,6 +277,121 @@ public class PostRepository implements IPostRepository {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 listener.onFailure(error.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public void getLikeCount(String postId, OnLikeCountCompleteListener listener) {
+        mDatabase.child("posts").child(postId).child("likes").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                listener.onComplete(snapshot.getChildrenCount());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    @Override
+    public void isLiked(String postId, String userId, OnIsLikedCompleteListener listener) {
+        mDatabase.child("posts").child(postId).child("likes").child(userId).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                listener.onComplete(snapshot.exists());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    @Override
+    public void isBookmarked(String postId, String userId, OnIsBookmarkedCompleteListener listener) {
+        mDatabase.child("posts").child(postId).child("bookmarks").child(userId).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                listener.onComplete(snapshot.exists());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    @Override
+    public void toggleLike(String postId, String userId, OnToggleLikeCompleteListener listener) {
+        mDatabase.child("posts").child(postId).runTransaction(new Transaction.Handler() {
+            @NonNull
+            @Override
+            public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+                Post post = mutableData.getValue(Post.class);
+                if (post == null) {
+                    return Transaction.success(mutableData);
+                }
+
+                Map<String, Boolean> likes = post.getLikes();
+                if (likes.containsKey(userId)) {
+                    likes.remove(userId);
+                } else {
+                    likes.put(userId, true);
+                }
+
+                mutableData.setValue(post);
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
+                if (committed && dataSnapshot.exists()) {
+                    Post post = dataSnapshot.getValue(Post.class);
+                    if (post != null) {
+                        boolean isSet = post.getLikes().containsKey(userId);
+                        int newCount = post.getLikes().size();
+                        listener.onComplete(isSet, newCount);
+                    }
+                }
+            }
+        });
+    }
+
+    @Override
+    public void toggleBookmark(String postId, String userId, OnToggleBookmarkCompleteListener listener) {
+        mDatabase.child("posts").child(postId).runTransaction(new Transaction.Handler() {
+            @NonNull
+            @Override
+            public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+                Post post = mutableData.getValue(Post.class);
+                if (post == null) {
+                    return Transaction.success(mutableData);
+                }
+
+                Map<String, Boolean> bookmarks = post.getBookmarks();
+                if (bookmarks.containsKey(userId)) {
+                    bookmarks.remove(userId);
+                } else {
+                    bookmarks.put(userId, true);
+                }
+
+                mutableData.setValue(post);
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
+                if (committed && dataSnapshot.exists()) {
+                    Post post = dataSnapshot.getValue(Post.class);
+                    if (post != null) {
+                        listener.onComplete(post.getBookmarks().containsKey(userId));
+                    }
+                }
             }
         });
     }

@@ -125,10 +125,38 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:textColor="@android:color/black"
+        android:maxLines="2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/actions_layout"
         tools:text="This is a caption for the post." />
+
+    <TextView
+        android:id="@+id/show_more"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Show more"
+        android:textColor="@color/blue"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/post_caption" />
+
+    <TextView
+        android:id="@+id/show_less"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Show less"
+        android:textColor="@color/blue"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/post_caption" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/caption_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="post_caption,show_more,show_less" />
 
     <TextView
         android:id="@+id/post_date"
@@ -138,6 +166,6 @@
         android:text="11:18 AM・June 20, 2021"
         android:textSize="12sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/post_caption" />
+        app:layout_constraintTop_toBottomOf="@+id/caption_barrier" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

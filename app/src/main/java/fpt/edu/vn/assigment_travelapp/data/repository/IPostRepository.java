@@ -19,6 +19,13 @@ public interface IPostRepository {
     void getPost(String postId, OnGetPostCompleteListener listener);
     void updatePost(String postId, String base64Image, String caption, OnPostUpdateCompleteListener listener);
 
+    void getLikeCount(String postId, OnLikeCountCompleteListener listener);
+    void isLiked(String postId, String userId, OnIsLikedCompleteListener listener);
+    void isBookmarked(String postId, String userId, OnIsBookmarkedCompleteListener listener);
+    void toggleLike(String postId, String userId, OnToggleLikeCompleteListener listener);
+    void toggleBookmark(String postId, String userId, OnToggleBookmarkCompleteListener listener);
+
+
     interface OnPostCreationCompleteListener {
         void onSuccess();
         void onFailure(String errorMessage);
@@ -57,5 +64,25 @@ public interface IPostRepository {
     interface OnPostUpdateCompleteListener {
         void onSuccess();
         void onFailure(String errorMessage);
+    }
+
+    interface OnLikeCountCompleteListener {
+        void onComplete(long count);
+    }
+
+    interface OnIsLikedCompleteListener {
+        void onComplete(boolean isLiked);
+    }
+
+    interface OnIsBookmarkedCompleteListener {
+        void onComplete(boolean isBookmarked);
+    }
+
+    interface OnToggleLikeCompleteListener {
+        void onComplete(boolean isSet, int newCount);
+    }
+
+    interface OnToggleBookmarkCompleteListener {
+        void onComplete(boolean isSet);
     }
 }

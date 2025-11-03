@@ -1,6 +1,7 @@
 package fpt.edu.vn.assigment_travelapp.adapter;
 
 import android.text.format.DateUtils;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -96,10 +97,24 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             // Format and set timestamp
             tvTimestamp.setText(getRelativeTime(comment.getTimestamp()));
 
-            Glide.with(itemView.getContext())
-                    .load(user.getPhotoUrl())
-                    .placeholder(R.drawable.ic_default_avatar)
-                    .into(ivAvatar);
+            String photoUrl = user.getPhotoUrl();
+            if (photoUrl != null && !photoUrl.isEmpty()) {
+                if (photoUrl.startsWith("http://") || photoUrl.startsWith("https://")) {
+                    Glide.with(itemView.getContext())
+                            .load(photoUrl)
+                            .placeholder(R.drawable.ic_default_avatar)
+                            .into(ivAvatar);
+                } else {
+                    byte[] decodedString = Base64.decode(photoUrl, Base64.DEFAULT);
+                    Glide.with(itemView.getContext())
+                            .asBitmap()
+                            .load(decodedString)
+                            .placeholder(R.drawable.ic_default_avatar)
+                            .into(ivAvatar);
+                }
+            } else {
+                ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+            }
 
             // Handle replies
             List<CommentWithUser> replies = commentWithUser.getReplies();
