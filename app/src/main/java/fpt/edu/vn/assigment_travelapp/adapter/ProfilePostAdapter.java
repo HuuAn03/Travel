@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -52,6 +53,21 @@ public class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.
             }
         }
 
+        if (post.getCaption() != null && !post.getCaption().isEmpty()) {
+            holder.caption.setVisibility(View.VISIBLE);
+            holder.caption.setText(post.getCaption());
+        } else {
+            holder.caption.setVisibility(View.GONE);
+        }
+
+        holder.caption.setOnClickListener(v -> {
+            if (holder.caption.getMaxLines() == 2) {
+                holder.caption.setMaxLines(Integer.MAX_VALUE);
+            } else {
+                holder.caption.setMaxLines(2);
+            }
+        });
+
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(post);
@@ -71,10 +87,12 @@ public class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView postImage;
+        TextView caption;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             postImage = itemView.findViewById(R.id.iv_post_image);
+            caption = itemView.findViewById(R.id.tv_caption);
         }
     }
 }

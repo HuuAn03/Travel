@@ -2,13 +2,8 @@ package fpt.edu.vn.assigment_travelapp.adapter;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.TextPaint;
-import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -91,6 +86,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         private final TextView tvPostDate;
         private final ImageView editIcon;
         private final ImageView deleteIcon;
+        private final TextView showMore;
+        private final TextView showLess;
+
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -106,6 +104,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             tvPostDate = itemView.findViewById(R.id.post_date);
             editIcon = itemView.findViewById(R.id.edit_icon);
             deleteIcon = itemView.findViewById(R.id.delete_icon);
+            showMore = itemView.findViewById(R.id.show_more);
+            showLess = itemView.findViewById(R.id.show_less);
 
             likeIcon.setOnClickListener(v -> {
                 int position = getAdapterPosition();
@@ -216,7 +216,30 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             tvPostDate.setText(getRelativeTime(post.getTimestamp()));
 
             // Set caption with 'see more' functionality
-            setSeeMoreText(tvPostCaption, post.getCaption());
+            tvPostCaption.setText(post.getCaption());
+            tvPostCaption.post(() -> {
+                if (tvPostCaption.getLineCount() > 2) {
+                    tvPostCaption.setMaxLines(2);
+                    showMore.setVisibility(View.VISIBLE);
+                    showLess.setVisibility(View.GONE);
+                } else {
+                    showMore.setVisibility(View.GONE);
+                    showLess.setVisibility(View.GONE);
+                }
+            });
+
+            showMore.setOnClickListener(v -> {
+                tvPostCaption.setMaxLines(Integer.MAX_VALUE);
+                showMore.setVisibility(View.GONE);
+                showLess.setVisibility(View.VISIBLE);
+            });
+
+            showLess.setOnClickListener(v -> {
+                tvPostCaption.setMaxLines(2);
+                showMore.setVisibility(View.VISIBLE);
+                showLess.setVisibility(View.GONE);
+            });
+
 
             likeIcon.setSelected(post.getLikes() != null && post.getLikes().containsKey(currentUserId));
             saveIcon.setSelected(post.getBookmarks() != null && post.getBookmarks().containsKey(currentUserId));
@@ -239,43 +262,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         private String getRelativeTime(long timestamp) {
             return DateUtils.getRelativeTimeSpanString(timestamp, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS).toString();
-        }
-
-        private void setSeeMoreText(final TextView textView, final String text) {
-            if (TextUtils.isEmpty(text)) {
-                textView.setVisibility(View.GONE);
-                return;
-            }
-            textView.setVisibility(View.VISIBLE);
-            textView.setText(text);
-            textView.post(() -> {
-                final int maxLines = 2;
-                if (textView.getLineCount() > maxLines) {
-                    int lineEndIndex = textView.getLayout().getLineEnd(maxLines - 1);
-                    String seeMore = "... see more";
-                    String textToShow = text.substring(0, lineEndIndex - seeMore.length()) + seeMore;
-
-                    SpannableString spannableString = new SpannableString(textToShow);
-                    ClickableSpan clickableSpan = new ClickableSpan() {
-                        @Override
-                        public void onClick(@NonNull View widget) {
-                            textView.setMaxLines(Integer.MAX_VALUE);
-                            textView.setText(text);
-                            textView.setMovementMethod(null);
-                        }
-                        @Override
-                        public void updateDrawState(@NonNull TextPaint ds) {
-                            super.updateDrawState(ds);
-                            ds.setUnderlineText(false);
-                            ds.setColor(ds.linkColor);
-                        }
-                    };
-                    spannableString.setSpan(clickableSpan, textToShow.length() - seeMore.length(), textToShow.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    textView.setText(spannableString);
-                    textView.setMovementMethod(LinkMovementMethod.getInstance());
-                    textView.setMaxLines(maxLines);
-                }
-            });
         }
     }
 }
