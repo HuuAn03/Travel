@@ -55,7 +55,9 @@ public class ChooseLocationFragment extends Fragment {
         if (isGranted) {
             getCurrentLocation();
         } else {
-            Toast.makeText(getContext(), "Location permission denied", Toast.LENGTH_SHORT).show();
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "Location permission denied", Toast.LENGTH_SHORT).show();
+            }
         }
     });
 
@@ -64,7 +66,9 @@ public class ChooseLocationFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = FragmentChooseLocationBinding.inflate(inflater, container, false);
 
-        Configuration.getInstance().load(getContext(), PreferenceManager.getDefaultSharedPreferences(getContext()));
+        if (getContext() != null) {
+            Configuration.getInstance().load(getContext(), PreferenceManager.getDefaultSharedPreferences(getContext()));
+        }
 
         map = binding.map;
         map.setTileSource(TileSourceFactory.MAPNIK);
@@ -74,7 +78,9 @@ public class ChooseLocationFragment extends Fragment {
         GeoPoint startPoint = new GeoPoint(10.7769, 106.7009); // Ho Chi Minh City
         map.getController().setCenter(startPoint);
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+        if (getActivity() != null) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        }
 
         return binding.getRoot();
     }
@@ -83,13 +89,14 @@ public class ChooseLocationFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (getContext() != null && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             getCurrentLocation();
         } else {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
         }
 
         getParentFragmentManager().setFragmentResultListener("requestKey", this, (requestKey, bundle) -> {
+            if (!isAdded()) return;
             double latitude = bundle.getDouble("latitude");
             double longitude = bundle.getDouble("longitude");
             GeoPoint selectedPoint = new GeoPoint(latitude, longitude);
@@ -99,11 +106,13 @@ public class ChooseLocationFragment extends Fragment {
         });
 
         binding.btnSetLocationOnMap.setOnClickListener(v -> {
-            NavHostFragment.findNavController(this).navigate(R.id.action_chooseLocationFragment_to_fullScreenMapFragment);
+            if (isAdded()) {
+                NavHostFragment.findNavController(this).navigate(R.id.action_chooseLocationFragment_to_fullScreenMapFragment);
+            }
         });
 
         binding.btnUseCurrentLocation.setOnClickListener(v -> {
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (getContext() != null && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 getCurrentLocation();
             } else {
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
@@ -111,11 +120,16 @@ public class ChooseLocationFragment extends Fragment {
         });
 
         binding.btnConfirm.setOnClickListener(v -> {
-            NavHostFragment.findNavController(this).navigate(R.id.action_chooseLocationFragment_to_navigation_home);
+            if (isAdded()) {
+                NavHostFragment.findNavController(this).navigate(R.id.action_chooseLocationFragment_to_navigation_home);
+            }
         });
     }
 
     private void saveLocationToDatabase(double latitude, double longitude) {
+        if (getContext() == null) {
+            return;
+        }
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
             Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
@@ -123,34 +137,43 @@ public class ChooseLocationFragment extends Fragment {
         }
         String userId = currentUser.getUid();
 
-        Geocoder geocoder = new Geocoder(requireContext(), Locale.getDefault());
+        Geocoder geocoder = new Geocoder(getContext(), Locale.getDefault());
         try {
             List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
             if (addresses != null && !addresses.isEmpty()) {
                 String addressString = addresses.get(0).getAddressLine(0);
 
-                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("users");
+                DatabaseReference databaseReference = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("users");
                 databaseReference.child(userId).child("location").setValue(addressString)
                         .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(getContext(), "Location saved successfully", Toast.LENGTH_SHORT).show();
+                            if (getContext() != null) {
+                                Toast.makeText(getContext(), "Location saved successfully", Toast.LENGTH_SHORT).show();
+                            }
                         })
                         .addOnFailureListener(e -> {
-                            Toast.makeText(getContext(), "Failed to save location", Toast.LENGTH_SHORT).show();
-                            Log.e(TAG, "Failed to save location to database", e);
+                            if (getContext() != null) {
+                                Toast.makeText(getContext(), "Failed to save location", Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, "Failed to save location to database", e);
+                            }
                         });
 
             } else {
-                Toast.makeText(getContext(), "Could not find address for the location", Toast.LENGTH_SHORT).show();
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Could not find address for the location", Toast.LENGTH_SHORT).show();
+                }
             }
         } catch (IOException e) {
             Log.e(TAG, "Geocoder failed", e);
-            Toast.makeText(getContext(), "Error getting address. Please try again.", Toast.LENGTH_SHORT).show();
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "Error getting address. Please try again.", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
     private void updateMapWithLocation(GeoPoint point, String title) {
+        if (map == null) return;
         map.post(() -> {
-            if (binding == null) { // Or getContext() == null, check if fragment is still alive
+            if (binding == null || getContext() == null) { 
                 return;
             }
             map.getController().setCenter(point);
@@ -168,46 +191,69 @@ public class ChooseLocationFragment extends Fragment {
 
 
     private void getCurrentLocation() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // This should be handled by the caller, but check again.
+        if (getContext() == null || ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        if (fusedLocationClient == null) {
             return;
         }
 
         Toast.makeText(getContext(), "Fetching current location...", Toast.LENGTH_SHORT).show();
 
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-            .addOnSuccessListener(requireActivity(), location -> {
-                if (location != null) {
-                    GeoPoint currentLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
-                    updateMapWithLocation(currentLocation, "Current Location");
-                    saveLocationToDatabase(location.getLatitude(), location.getLongitude());
-                } else {
-                    Toast.makeText(getContext(), "Could not get current location. Please ensure location is enabled.", Toast.LENGTH_LONG).show();
-                }
-            })
-            .addOnFailureListener(requireActivity(), e -> {
-                Log.e(TAG, "Failed to get current location.", e);
-                Toast.makeText(getContext(), "Failed to get current location. Please try again.", Toast.LENGTH_LONG).show();
-            });
+                .addOnSuccessListener(location -> {
+                    if (!isAdded()) {
+                        return;
+                    }
+                    if (location != null) {
+                        GeoPoint currentLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
+                        updateMapWithLocation(currentLocation, "Current Location");
+                        saveLocationToDatabase(location.getLatitude(), location.getLongitude());
+                    } else {
+                        Toast.makeText(getContext(), "Could not get current location. Please ensure location is enabled.", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (!isAdded()) {
+                        return;
+                    }
+                    Log.e(TAG, "Failed to get current location.", e);
+                    Toast.makeText(getContext(), "Failed to get current location. Please try again.", Toast.LENGTH_LONG).show();
+                });
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        map.onResume();
-        ((AppCompatActivity) getActivity()).getSupportActionBar().hide();
+        if (map != null) {
+            map.onResume();
+        }
+        if (getActivity() instanceof AppCompatActivity) {
+            AppCompatActivity activity = (AppCompatActivity) getActivity();
+            if (activity != null && activity.getSupportActionBar() != null) {
+                activity.getSupportActionBar().hide();
+            }
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        map.onPause();
-        ((AppCompatActivity) getActivity()).getSupportActionBar().show();
+        if (map != null) {
+            map.onPause();
+        }
+        if (getActivity() instanceof AppCompatActivity) {
+            AppCompatActivity activity = (AppCompatActivity) getActivity();
+            if (activity != null && activity.getSupportActionBar() != null) {
+                activity.getSupportActionBar().show();
+            }
+        }
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        map = null;
         binding = null;
     }
 }
