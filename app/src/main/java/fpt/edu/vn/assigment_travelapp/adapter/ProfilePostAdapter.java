@@ -21,9 +21,15 @@ import fpt.edu.vn.assigment_travelapp.data.model.Post;
 public class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.ViewHolder> {
 
     private List<Post> posts;
+    private OnItemClickListener listener;
 
-    public ProfilePostAdapter(List<Post> posts) {
+    public interface OnItemClickListener {
+        void onItemClick(Post post);
+    }
+
+    public ProfilePostAdapter(List<Post> posts, OnItemClickListener listener) {
         this.posts = posts;
+        this.listener = listener;
     }
 
     @NonNull
@@ -45,6 +51,12 @@ public class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.
                 Glide.with(holder.itemView.getContext()).load(post.getImageUrl()).into(holder.postImage);
             }
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(post);
+            }
+        });
     }
 
     @Override

@@ -42,6 +42,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         void onCommentClick(int position);
         void onEditClick(int position);
         void onDeleteClick(int position);
+        void onUserClick(String userId);
     }
 
     public void setOnPostActionListener(OnPostActionListener listener) {
@@ -138,6 +139,20 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 int position = getAdapterPosition();
                 if (listener != null && position != RecyclerView.NO_POSITION) {
                     listener.onDeleteClick(position);
+                }
+            });
+
+            ivAvatar.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (listener != null && position != RecyclerView.NO_POSITION) {
+                    listener.onUserClick(postList.get(position).getUser().getUserId());
+                }
+            });
+
+            tvUsername.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (listener != null && position != RecyclerView.NO_POSITION) {
+                    listener.onUserClick(postList.get(position).getUser().getUserId());
                 }
             });
         }

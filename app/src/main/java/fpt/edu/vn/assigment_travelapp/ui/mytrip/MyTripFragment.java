@@ -177,4 +177,15 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
                 .setNegativeButton("No", null)
                 .show();
     }
+
+    @Override
+    public void onUserClick(String userId) {
+        if (currentUser != null && userId.equals(currentUser.getUid())) {
+            NavHostFragment.findNavController(this).navigate(R.id.navigation_profile);
+        } else {
+            Bundle bundle = new Bundle();
+            bundle.putString("userId", userId);
+            NavHostFragment.findNavController(this).navigate(R.id.action_navigation_my_trip_to_userProfileFragment, bundle);
+        }
+    }
 }
