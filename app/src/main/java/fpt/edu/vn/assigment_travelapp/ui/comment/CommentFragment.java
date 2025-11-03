@@ -63,7 +63,6 @@ public class CommentFragment extends Fragment implements CommentAdapter.OnCommen
         }
 
         setupRecyclerView();
-        loadCurrentUserAvatar();
         observeViewModel();
 
         binding.btnPostComment.setOnClickListener(v -> {
@@ -92,12 +91,6 @@ public class CommentFragment extends Fragment implements CommentAdapter.OnCommen
         commentAdapter.setOnCommentActionListener(this);
         binding.recyclerViewComments.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerViewComments.setAdapter(commentAdapter);
-    }
-
-    private void loadCurrentUserAvatar() {
-        if (currentUser != null && currentUser.getPhotoUrl() != null) {
-            loadImage(binding.ivCurrentUserAvatar, currentUser.getPhotoUrl().toString());
-        }
     }
 
     private void observeViewModel() {
@@ -146,6 +139,12 @@ public class CommentFragment extends Fragment implements CommentAdapter.OnCommen
         });
 
         viewModel.getCurrentUserDetails().observe(getViewLifecycleOwner(), user -> {
+            if (user != null && user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
+                loadImage(binding.ivCurrentUserAvatar, user.getPhotoUrl());
+            } else {
+                binding.ivCurrentUserAvatar.setImageResource(R.drawable.ic_profile);
+            }
+
             // We have the current user's details, now we can safely bind post data
             if (viewModel.getPost().getValue() != null) {
                 bindPostData(viewModel.getPost().getValue());
