@@ -13,6 +13,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import fpt.edu.vn.assigment_travelapp.data.model.Place;
 import fpt.edu.vn.assigment_travelapp.data.model.User;
 
 public class HomeViewModel extends ViewModel {
@@ -21,8 +25,11 @@ public class HomeViewModel extends ViewModel {
 
     private final MutableLiveData<User> userDetails = new MutableLiveData<>();
     private final MutableLiveData<String> error = new MutableLiveData<>();
+    private final MutableLiveData<List<Place>> places = new MutableLiveData<>();
     private final DatabaseReference usersRef = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("users");
+    private final DatabaseReference placesRef = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("places");
     private ValueEventListener userDetailsListener;
+    private ValueEventListener placesListener;
 
     public LiveData<User> getUserDetails() {
         return userDetails;
@@ -30,6 +37,10 @@ public class HomeViewModel extends ViewModel {
 
     public LiveData<String> getError() {
         return error;
+    }
+
+    public LiveData<List<Place>> getPlaces() {
+        return places;
     }
 
     public void loadUserDetails(String uid) {
@@ -57,12 +68,43 @@ public class HomeViewModel extends ViewModel {
         usersRef.child(uid).addValueEventListener(userDetailsListener);
     }
 
+    public void loadPopularPlaces() {
+        if (placesListener != null) {
+            placesRef.removeEventListener(placesListener);
+        }
+        
+        placesListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Place> placeList = new ArrayList<>();
+                for (DataSnapshot placeSnapshot : snapshot.getChildren()) {
+                    Place place = placeSnapshot.getValue(Place.class);
+                    if (place != null && place.isAvailable()) {
+                        place.setPlaceId(placeSnapshot.getKey());
+                        placeList.add(place);
+                    }
+                }
+                places.postValue(placeList);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                error.postValue(databaseError.getMessage());
+                Log.e(TAG, "Error loading places: " + databaseError.getMessage());
+            }
+        };
+        placesRef.addListenerForSingleValueEvent(placesListener);
+    }
+
     @Override
     protected void onCleared() {
         super.onCleared();
-        if (userDetailsListener != null) {
+        if (userDetailsListener != null && usersRef != null) {
             // To prevent memory leaks, we should remove the listener when the ViewModel is cleared
             // You might need to adjust this depending on your specific lifecycle needs
+        }
+        if (placesListener != null && placesRef != null) {
+            placesRef.removeEventListener(placesListener);
         }
     }
 }
