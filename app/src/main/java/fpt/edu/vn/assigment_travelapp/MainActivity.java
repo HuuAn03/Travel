@@ -53,13 +53,61 @@ public class MainActivity extends AppCompatActivity {
 
         BottomNavigationView navView = findViewById(R.id.nav_view);
         appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_home, R.id.navigation_my_trip, R.id.navigation_explore, R.id.navigation_favorite, R.id.navigation_profile)
+                R.id.navigation_home, R.id.navigation_my_trip, R.id.navigation_favorite, R.id.navigation_profile)
                 .build();
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-        NavigationUI.setupWithNavController(binding.navView, navController);
+        
+        // Custom navigation handling to clear booking fragments when navigating between top-level destinations
+        binding.navView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            
+            // When navigating to top-level destinations, always clear back stack to ensure
+            // no booking fragments remain in the stack
+            if (itemId == R.id.navigation_home || itemId == R.id.navigation_my_trip || 
+                 itemId == R.id.navigation_favorite || itemId == R.id.navigation_profile) {
+                
+                // Check current destination
+                int currentDestId = navController.getCurrentDestination() != null ? 
+                        navController.getCurrentDestination().getId() : -1;
+                
+                // If already on the target destination, don't navigate
+                if (currentDestId == itemId) {
+                    return true;
+                }
+                
+                // Check if current destination is a booking fragment
+                boolean isBookingFragment = currentDestId == R.id.searchLocationFragment ||
+                        currentDestId == R.id.bookingFragment ||
+                        currentDestId == R.id.paymentFragment ||
+                        currentDestId == R.id.bookingDetailsFragment ||
+                        currentDestId == R.id.myBookingsFragment;
+                
+                // If coming from a booking fragment or navigating between top-level destinations,
+                // clear back stack to ensure clean navigation
+                if (isBookingFragment || 
+                    (currentDestId == R.id.navigation_home || currentDestId == R.id.navigation_my_trip || 
+                     currentDestId == R.id.navigation_favorite || currentDestId == R.id.navigation_profile)) {
+                    
+                    // Pop to the start destination to clear all fragments, then navigate to target
+                    NavOptions navOptions = new NavOptions.Builder()
+                            .setPopUpTo(navController.getGraph().getStartDestination(), true)
+                            .build();
+                    navController.navigate(itemId, null, navOptions);
+                } else {
+                    // Use default navigation behavior
+                    NavigationUI.onNavDestinationSelected(item, navController);
+                }
+            } else {
+                // Use default navigation behavior for other destinations
+                NavigationUI.onNavDestinationSelected(item, navController);
+            }
+            
+            return true;
+        });
 
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            // Handle menu visibility
             if (optionsMenu != null) {
                 MenuItem logoutItem = optionsMenu.findItem(R.id.action_logout);
                 if (logoutItem != null) {
@@ -67,20 +115,48 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            // Handle splash screen
             if (destination.getId() == R.id.splashFragment) {
                  FirebaseUser currentUser = mAuth.getCurrentUser();
                  if (currentUser != null) {
                     navController.navigate(R.id.navigation_home);
                  }
-            } else if (destination.getId() == R.id.signInFragment || destination.getId() == R.id.signUpFragment || destination.getId() == R.id.newPostFragment || destination.getId() == R.id.fullScreenMapFragment || destination.getId() == R.id.chooseLocationFragment || destination.getId() == R.id.notificationsFragment) {
+            } 
+            // Hide navigation bar and action bar for certain fragments
+            else if (destination.getId() == R.id.signInFragment || destination.getId() == R.id.signUpFragment || 
+                       destination.getId() == R.id.newPostFragment || destination.getId() == R.id.fullScreenMapFragment || 
+                       destination.getId() == R.id.chooseLocationFragment || destination.getId() == R.id.notificationsFragment ||
+                       destination.getId() == R.id.managePlacesFragment) {
                 navView.setVisibility(View.GONE);
                 if (getSupportActionBar() != null) {
                     getSupportActionBar().hide();
                 }
-            } else {
+            } 
+            // Show action bar with back button and navigation bar for booking fragments
+            else if (destination.getId() == R.id.searchLocationFragment || 
+                       destination.getId() == R.id.bookingFragment || 
+                       destination.getId() == R.id.paymentFragment ||
+                       destination.getId() == R.id.bookingDetailsFragment ||
+                       destination.getId() == R.id.myBookingsFragment) {
+                // Show navigation bar for booking fragments
                 navView.setVisibility(View.VISIBLE);
                 if (getSupportActionBar() != null) {
                     getSupportActionBar().show();
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                    getSupportActionBar().setDisplayShowHomeEnabled(true);
+                }
+            } 
+            // Show navigation bar and hide back button for main fragments
+            else {
+                navView.setVisibility(View.VISIBLE);
+                if (getSupportActionBar() != null) {
+                    getSupportActionBar().show();
+                    // Check if it's a top-level destination
+                    boolean isTopLevelDestination = destination.getId() == R.id.navigation_home ||
+                            destination.getId() == R.id.navigation_my_trip ||
+                            destination.getId() == R.id.navigation_favorite ||
+                            destination.getId() == R.id.navigation_profile;
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(!isTopLevelDestination);
                 }
             }
         });

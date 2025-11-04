@@ -69,6 +69,11 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
                     .navigate(R.id.action_navigation_my_trip_to_newPostFragment);
         });
 
+        binding.btnViewBookings.setOnClickListener(v -> {
+            NavHostFragment.findNavController(MyTripFragment.this)
+                    .navigate(R.id.action_navigation_my_trip_to_myBookingsFragment);
+        });
+
         binding.swipeRefreshLayout.setOnRefreshListener(() -> {
             viewModel.fetchAllPosts();
         });

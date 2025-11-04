@@ -78,6 +78,12 @@
         <action
             android:id="@+id/action_navigation_home_to_chooseLocationFragment"
             app:destination="@id/chooseLocationFragment" />
+        <action
+            android:id="@+id/action_navigation_home_to_searchLocationFragment"
+            app:destination="@id/searchLocationFragment" />
+        <action
+            android:id="@+id/action_navigation_home_to_bookingFragment"
+            app:destination="@id/bookingFragment" />
     </fragment>
 
     <fragment
@@ -94,6 +100,9 @@
         <action
             android:id="@+id/action_navigation_my_trip_to_userProfileFragment"
             app:destination="@id/userProfileFragment" />
+        <action
+            android:id="@+id/action_navigation_my_trip_to_myBookingsFragment"
+            app:destination="@id/myBookingsFragment" />
     </fragment>
 
     <fragment
@@ -116,6 +125,9 @@
         <action
             android:id="@+id/action_navigation_profile_to_commentFragment"
             app:destination="@id/commentFragment" />
+        <action
+            android:id="@+id/action_navigation_profile_to_managePlacesFragment"
+            app:destination="@id/managePlacesFragment" />
         <argument
             android:name="userId"
             app:argType="string"
@@ -150,9 +162,96 @@
     </fragment>
 
     <fragment
-        android:id="@+id/notificationsFragment"
-        android:name="fpt.edu.vn.assigment_travelapp.ui.notifications.NotificationsFragment"
-        android:label="Notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:id="@+id/searchLocationFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.booking.SearchLocationFragment"
+        android:label="Search Locations"
+        tools:layout="@layout/fragment_search_location">
+        <argument
+            android:name="placeId"
+            app:argType="string"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_searchLocationFragment_to_bookingFragment"
+            app:destination="@id/bookingFragment" />
+        <action
+            android:id="@+id/action_searchLocationFragment_to_managePlacesFragment"
+            app:destination="@id/managePlacesFragment" />
+        <action
+            android:id="@+id/action_searchLocationFragment_to_navigation_home"
+            app:destination="@id/navigation_home" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/bookingFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.booking.BookingFragment"
+        android:label="Book Now"
+        tools:layout="@layout/fragment_booking">
+        <argument
+            android:name="placeId"
+            app:argType="string"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_bookingFragment_to_paymentFragment"
+            app:destination="@id/paymentFragment" />
+        <action
+            android:id="@+id/action_bookingFragment_to_navigation_home"
+            app:destination="@id/navigation_home" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/paymentFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.booking.PaymentFragment"
+        android:label="Payment"
+        tools:layout="@layout/fragment_payment">
+        <argument
+            android:name="bookingId"
+            app:argType="string"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_paymentFragment_to_bookingDetailsFragment"
+            app:destination="@id/bookingDetailsFragment" />
+        <action
+            android:id="@+id/action_paymentFragment_to_navigation_home"
+            app:destination="@id/navigation_home" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/bookingDetailsFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.booking.BookingDetailsFragment"
+        android:label="Booking Details"
+        tools:layout="@layout/fragment_booking_details">
+        <argument
+            android:name="bookingId"
+            app:argType="string"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_bookingDetailsFragment_to_myBookingsFragment"
+            app:destination="@id/myBookingsFragment" />
+        <action
+            android:id="@+id/action_bookingDetailsFragment_to_paymentFragment"
+            app:destination="@id/paymentFragment" />
+        <action
+            android:id="@+id/action_bookingDetailsFragment_to_navigation_home"
+            app:destination="@id/navigation_home" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/managePlacesFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.booking.ManagePlacesFragment"
+        android:label="Manage Places"
+        tools:layout="@layout/fragment_manage_places" />
+
+    <fragment
+        android:id="@+id/myBookingsFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.booking.MyBookingsFragment"
+        android:label="My Bookings"
+        tools:layout="@layout/fragment_my_bookings">
+        <action
+            android:id="@+id/action_myBookingsFragment_to_bookingDetailsFragment"
+            app:destination="@id/bookingDetailsFragment" />
+        <action
+            android:id="@+id/action_myBookingsFragment_to_navigation_home"
+            app:destination="@id/navigation_home" />
+    </fragment>
 
 </navigation>
