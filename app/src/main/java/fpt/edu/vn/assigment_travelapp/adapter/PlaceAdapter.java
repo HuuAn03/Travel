@@ -80,7 +80,7 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
         void bind(Place place) {
             nameTextView.setText(place.getName());
             addressTextView.setText(place.getAddress());
-            priceTextView.setText(String.format("$%.2f/day", place.getPricePerDay()));
+            priceTextView.setText(String.format("%,d VND/day", (int) place.getPricePerDay()));
             ratingTextView.setText(String.valueOf(place.getRating()));
             categoryTextView.setText(place.getCategory());
 

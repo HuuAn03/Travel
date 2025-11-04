@@ -85,7 +85,7 @@ public class BookingDetailFragment extends Fragment {
             binding.tvPaymentStatus.setTextColor(Color.parseColor("#F44336")); // Red
         }
 
-        binding.tvTotalPrice.setText(String.format(Locale.getDefault(), "$%.2f", booking.getTotalPrice()));
+        binding.tvTotalPrice.setText(String.format(Locale.getDefault(), "%,d VND", (int) booking.getTotalPrice()));
 
         // Booking ID and date
         binding.tvBookingId.setText(booking.getBookingId());

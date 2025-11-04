@@ -91,7 +91,7 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.BookingV
         void bind(Booking booking) {
             nameTextView.setText(booking.getPlaceName());
             addressTextView.setText(booking.getPlaceAddress());
-            priceTextView.setText(String.format("$%.2f", booking.getTotalPrice()));
+            priceTextView.setText(String.format("%,d VND", (int) booking.getTotalPrice()));
             
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
             checkInTextView.setText("Check-in: " + sdf.format(new Date(booking.getCheckInDate())));
