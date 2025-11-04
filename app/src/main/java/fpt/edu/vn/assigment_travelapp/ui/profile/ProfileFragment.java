@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -21,6 +22,8 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -65,6 +68,11 @@ public class ProfileFragment extends Fragment {
     private ViewPagerAdapter viewPagerAdapter;
     private String userId;
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true); // Enable menu handling
+    }
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -85,17 +93,18 @@ public class ProfileFragment extends Fragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         if (getArguments() != null) {
             userId = getArguments().getString("userId");
         }
+
+        FirebaseUser fUser = mAuth.getCurrentUser();
+        String currentUserId = (fUser != null) ? fUser.getUid() : null;
+        boolean isViewingOwnProfile = (userId == null || userId.isEmpty() || userId.equals(currentUserId));
+
+        setupActionBar(isViewingOwnProfile);
 
         bannerImagePickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -117,11 +126,6 @@ public class ProfileFragment extends Fragment {
                 }
         );
 
-        FirebaseUser fUser = mAuth.getCurrentUser();
-        String currentUserId = (fUser != null) ? fUser.getUid() : null;
-
-        boolean isViewingOwnProfile = (userId == null || userId.isEmpty() || userId.equals(currentUserId));
-
         if (isViewingOwnProfile) {
             userId = currentUserId;
             binding.btnChangeBanner.setVisibility(View.VISIBLE);
@@ -141,6 +145,17 @@ public class ProfileFragment extends Fragment {
             setupPostObservers();
         } else {
             Log.w(TAG, "Not logged in and no user ID to display profile.");
+        }
+    }
+
+    private void setupActionBar(boolean isOwnProfile) {
+        if (getActivity() instanceof AppCompatActivity) {
+            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.show();
+                actionBar.setTitle("Profile");
+                actionBar.setDisplayHomeAsUpEnabled(!isOwnProfile);
+            }
         }
     }
 
@@ -367,6 +382,17 @@ public class ProfileFragment extends Fragment {
             Log.e(TAG, "Error converting image to Base64", e);
             Toast.makeText(getContext(), "Failed to process image.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+                getParentFragmentManager().popBackStack();
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

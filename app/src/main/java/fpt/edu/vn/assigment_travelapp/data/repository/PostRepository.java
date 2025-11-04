@@ -9,6 +9,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import fpt.edu.vn.assigment_travelapp.data.model.Comment;
@@ -33,6 +35,72 @@ public class PostRepository implements IPostRepository {
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference();
     }
+
+    private void createNotification(String postOwnerId, String postId, String postImageUrl, String message, String type) {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null || currentUser.getUid().equals(postOwnerId)) {
+            return;
+        }
+        String currentUserId = currentUser.getUid();
+
+        DatabaseReference notificationsRef = mDatabase.child("notifications").child(postOwnerId);
+        String notificationId = notificationsRef.push().getKey();
+
+        mDatabase.child("users").child(currentUserId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                User triggeringUser = snapshot.getValue(User.class);
+                if (triggeringUser != null) {
+                    String finalMessage = "<b>" + triggeringUser.getName() + "</b> " + message;
+                    long timestamp = System.currentTimeMillis();
+
+                    Map<String, Object> notificationData = new HashMap<>();
+                    notificationData.put("id", notificationId);
+                    notificationData.put("type", type);
+                    notificationData.put("triggeringUserId", currentUserId);
+                    notificationData.put("triggeringUserAvatar", triggeringUser.getPhotoUrl());
+                    notificationData.put("message", finalMessage);
+                    notificationData.put("postId", postId);
+                    notificationData.put("postImageUrl", postImageUrl);
+                    notificationData.put("timestamp", timestamp);
+                    notificationData.put("read", false);
+
+                    if (notificationId != null) {
+                        notificationsRef.child(notificationId).setValue(notificationData);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+            }
+        });
+    }
+
+    private void deleteNotification(String postOwnerId, String postId, String type) {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            return;
+        }
+        String currentUserId = currentUser.getUid();
+        DatabaseReference notificationsRef = mDatabase.child("notifications").child(postOwnerId);
+        Query notificationQuery = notificationsRef.orderByChild("triggeringUserId").equalTo(currentUserId);
+        notificationQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    if (postId.equals(snapshot.child("postId").getValue(String.class)) && type.equals(snapshot.child("type").getValue(String.class))) {
+                        snapshot.getRef().removeValue();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+    }
+
 
     @Override
     public void createPost(String base64Image, String caption, OnPostCreationCompleteListener listener) {
@@ -119,7 +187,17 @@ public class PostRepository implements IPostRepository {
 
         comment.setCommentId(commentId);
         mDatabase.child("posts").child(postId).child("comments").child(commentId).setValue(comment)
-                .addOnSuccessListener(aVoid -> listener.onSuccess())
+                .addOnSuccessListener(aVoid -> {
+                    getPost(postId, new OnGetPostCompleteListener() {
+                        @Override
+                        public void onSuccess(Post post) {
+                            createNotification(post.getUserId(), postId, post.getImageUrl(), "commented on your post: \"" + comment.getText() + "\"", "comment");
+                        }
+                        @Override
+                        public void onFailure(String error) {}
+                    });
+                    listener.onSuccess();
+                })
                 .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
     }
 
@@ -312,6 +390,46 @@ public class PostRepository implements IPostRepository {
     }
 
     @Override
+    public void toggleLike(String postId, String userId, OnLikeToggleCompleteListener listener) {
+        DatabaseReference postRef = mDatabase.child("posts").child(postId);
+        postRef.runTransaction(new Transaction.Handler() {
+            @NonNull
+            @Override
+            public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+                Post post = mutableData.getValue(Post.class);
+                if (post == null) {
+                    return Transaction.success(mutableData);
+                }
+
+                if (post.getLikes().containsKey(userId)) {
+                    post.getLikes().remove(userId);
+                } else {
+                    post.getLikes().put(userId, true);
+                }
+
+                mutableData.setValue(post);
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError error, boolean committed, @NonNull DataSnapshot currentData) {
+                if (committed) {
+                    Post post = currentData.getValue(Post.class);
+                    if (post != null) {
+                        boolean isLiked = post.getLikes().containsKey(userId);
+                        listener.onComplete(isLiked, post.getLikes().size());
+                        if (isLiked) {
+                            createNotification(post.getUserId(), postId, post.getImageUrl(), "liked your post", "like");
+                        } else {
+                            deleteNotification(post.getUserId(), postId, "like");
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    @Override
     public void isBookmarked(String postId, String userId, OnIsBookmarkedCompleteListener listener) {
         mDatabase.child("posts").child(postId).child("bookmarks").child(userId).addValueEventListener(new ValueEventListener() {
             @Override
@@ -327,8 +445,9 @@ public class PostRepository implements IPostRepository {
     }
 
     @Override
-    public void toggleLike(String postId, String userId, OnToggleLikeCompleteListener listener) {
-        mDatabase.child("posts").child(postId).runTransaction(new Transaction.Handler() {
+    public void toggleBookmark(String postId, String userId, OnBookmarkToggleCompleteListener listener) {
+        DatabaseReference postRef = mDatabase.child("posts").child(postId);
+        postRef.runTransaction(new Transaction.Handler() {
             @NonNull
             @Override
             public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
@@ -337,11 +456,10 @@ public class PostRepository implements IPostRepository {
                     return Transaction.success(mutableData);
                 }
 
-                Map<String, Boolean> likes = post.getLikes();
-                if (likes.containsKey(userId)) {
-                    likes.remove(userId);
+                if (post.getBookmarks().containsKey(userId)) {
+                    post.getBookmarks().remove(userId);
                 } else {
-                    likes.put(userId, true);
+                    post.getBookmarks().put(userId, true);
                 }
 
                 mutableData.setValue(post);
@@ -349,47 +467,17 @@ public class PostRepository implements IPostRepository {
             }
 
             @Override
-            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
-                if (committed && dataSnapshot.exists()) {
-                    Post post = dataSnapshot.getValue(Post.class);
+            public void onComplete(DatabaseError error, boolean committed, @NonNull DataSnapshot currentData) {
+                if (committed) {
+                    Post post = currentData.getValue(Post.class);
                     if (post != null) {
-                        boolean isSet = post.getLikes().containsKey(userId);
-                        int newCount = post.getLikes().size();
-                        listener.onComplete(isSet, newCount);
-                    }
-                }
-            }
-        });
-    }
-
-    @Override
-    public void toggleBookmark(String postId, String userId, OnToggleBookmarkCompleteListener listener) {
-        mDatabase.child("posts").child(postId).runTransaction(new Transaction.Handler() {
-            @NonNull
-            @Override
-            public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
-                Post post = mutableData.getValue(Post.class);
-                if (post == null) {
-                    return Transaction.success(mutableData);
-                }
-
-                Map<String, Boolean> bookmarks = post.getBookmarks();
-                if (bookmarks.containsKey(userId)) {
-                    bookmarks.remove(userId);
-                } else {
-                    bookmarks.put(userId, true);
-                }
-
-                mutableData.setValue(post);
-                return Transaction.success(mutableData);
-            }
-
-            @Override
-            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
-                if (committed && dataSnapshot.exists()) {
-                    Post post = dataSnapshot.getValue(Post.class);
-                    if (post != null) {
-                        listener.onComplete(post.getBookmarks().containsKey(userId));
+                        boolean isBookmarked = post.getBookmarks().containsKey(userId);
+                        listener.onComplete(isBookmarked);
+                        if (isBookmarked) {
+                            createNotification(post.getUserId(), postId, post.getImageUrl(), "bookmarked your post", "bookmark");
+                        } else {
+                            deleteNotification(post.getUserId(), postId, "bookmark");
+                        }
                     }
                 }
             }

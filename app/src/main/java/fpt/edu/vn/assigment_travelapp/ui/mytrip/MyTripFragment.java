@@ -9,6 +9,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
@@ -19,11 +21,9 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import fpt.edu.vn.assigment_travelapp.R;
 import fpt.edu.vn.assigment_travelapp.adapter.PostAdapter;
-import fpt.edu.vn.assigment_travelapp.data.model.Post;
 import fpt.edu.vn.assigment_travelapp.data.model.PostWithUser;
 import fpt.edu.vn.assigment_travelapp.data.model.User;
 import fpt.edu.vn.assigment_travelapp.databinding.FragmentMyTripBinding;
@@ -42,6 +42,19 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
         viewModel = new ViewModelProvider(this).get(MyTripViewModel.class);
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         return binding.getRoot();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getActivity() instanceof AppCompatActivity) {
+            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.show();
+                actionBar.setTitle("My Trip");
+                actionBar.setDisplayHomeAsUpEnabled(false);
+            }
+        }
     }
 
     @Override
@@ -99,6 +112,38 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
                 postAdapter.setCurrentUser(user);
             }
         });
+
+        viewModel.getLikeUpdate().observe(getViewLifecycleOwner(), likeUpdate -> {
+            if (likeUpdate == null) return;
+            for (int i = 0; i < postList.size(); i++) {
+                PostWithUser pwu = postList.get(i);
+                if (pwu.getPost().getPostId().equals(likeUpdate.postId)) {
+                    if (likeUpdate.isLiked) {
+                        pwu.getPost().getLikes().put(currentUser.getUid(), true);
+                    } else {
+                        pwu.getPost().getLikes().remove(currentUser.getUid());
+                    }
+                    postAdapter.notifyItemChanged(i);
+                    break;
+                }
+            }
+        });
+
+        viewModel.getBookmarkUpdate().observe(getViewLifecycleOwner(), bookmarkUpdate -> {
+            if (bookmarkUpdate == null) return;
+            for (int i = 0; i < postList.size(); i++) {
+                PostWithUser pwu = postList.get(i);
+                if (pwu.getPost().getPostId().equals(bookmarkUpdate.postId)) {
+                    if (bookmarkUpdate.isBookmarked) {
+                        pwu.getPost().getBookmarks().put(currentUser.getUid(), true);
+                    } else {
+                        pwu.getPost().getBookmarks().remove(currentUser.getUid());
+                    }
+                    postAdapter.notifyItemChanged(i);
+                    break;
+                }
+            }
+        });
     }
 
     @Override
@@ -111,18 +156,7 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
     public void onLikeClick(int position) {
         if (currentUser != null) {
             PostWithUser postWithUser = postList.get(position);
-            Post post = postWithUser.getPost();
-            String userId = currentUser.getUid();
-
-            Map<String, Boolean> likes = post.getLikes();
-            if (likes.containsKey(userId)) {
-                likes.remove(userId);
-            } else {
-                likes.put(userId, true);
-            }
-            postAdapter.notifyItemChanged(position);
-
-            viewModel.toggleLike(post.getPostId(), userId);
+            viewModel.toggleLike(postWithUser.getPost().getPostId(), currentUser.getUid());
         }
     }
 
@@ -130,18 +164,7 @@ public class MyTripFragment extends Fragment implements PostAdapter.OnPostAction
     public void onSaveClick(int position) {
         if (currentUser != null) {
             PostWithUser postWithUser = postList.get(position);
-            Post post = postWithUser.getPost();
-            String userId = currentUser.getUid();
-
-            Map<String, Boolean> bookmarks = post.getBookmarks();
-            if (bookmarks.containsKey(userId)) {
-                bookmarks.remove(userId);
-            } else {
-                bookmarks.put(userId, true);
-            }
-            postAdapter.notifyItemChanged(position);
-
-            viewModel.toggleBookmark(post.getPostId(), userId);
+            viewModel.toggleBookmark(postWithUser.getPost().getPostId(), currentUser.getUid());
         }
     }
 

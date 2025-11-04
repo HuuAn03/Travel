@@ -149,4 +149,10 @@
             app:nullable="true" />
     </fragment>
 
+    <fragment
+        android:id="@+id/notificationsFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.notifications.NotificationsFragment"
+        android:label="Notifications"
+        tools:layout="@layout/fragment_notifications" />
+
 </navigation>

@@ -1,6 +1,15 @@
 package fpt.edu.vn.assigment_travelapp.ui.explore;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.Html;
 import android.view.*;
 import android.widget.*;
@@ -51,6 +60,19 @@ public class ExploreFragment extends Fragment {
         return v;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getActivity() instanceof AppCompatActivity) {
+            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.show();
+                actionBar.setTitle("Explore");
+                actionBar.setDisplayHomeAsUpEnabled(false);
+            }
+        }
+    }
+  
     private void addMessage(String message, boolean isUser) {
         messages.add(new ChatMessage(message, isUser));
         requireActivity().runOnUiThread(() -> {
@@ -122,5 +144,11 @@ public class ExploreFragment extends Fragment {
         // Xuống dòng
         html = html.replace("\n", "<br>");
         return html;
+    }
+  
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }

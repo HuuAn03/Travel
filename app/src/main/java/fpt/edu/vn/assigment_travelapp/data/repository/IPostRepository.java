@@ -22,8 +22,8 @@ public interface IPostRepository {
     void getLikeCount(String postId, OnLikeCountCompleteListener listener);
     void isLiked(String postId, String userId, OnIsLikedCompleteListener listener);
     void isBookmarked(String postId, String userId, OnIsBookmarkedCompleteListener listener);
-    void toggleLike(String postId, String userId, OnToggleLikeCompleteListener listener);
-    void toggleBookmark(String postId, String userId, OnToggleBookmarkCompleteListener listener);
+    void toggleLike(String postId, String userId, OnLikeToggleCompleteListener listener);
+    void toggleBookmark(String postId, String userId, OnBookmarkToggleCompleteListener listener);
 
 
     interface OnPostCreationCompleteListener {
@@ -78,11 +78,11 @@ public interface IPostRepository {
         void onComplete(boolean isBookmarked);
     }
 
-    interface OnToggleLikeCompleteListener {
+    interface OnLikeToggleCompleteListener {
         void onComplete(boolean isSet, int newCount);
     }
 
-    interface OnToggleBookmarkCompleteListener {
+    interface OnBookmarkToggleCompleteListener {
         void onComplete(boolean isSet);
     }
 }

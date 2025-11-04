@@ -6,8 +6,6 @@ import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.List;
 
@@ -23,12 +21,12 @@ public class MyTripViewModel extends ViewModel {
     private final IUserRepository userRepository;
     private final MutableLiveData<PostFetchState> postFetchState = new MutableLiveData<>();
     private final MutableLiveData<User> user = new MutableLiveData<>();
-    private final DatabaseReference postsRef;
+    private final MutableLiveData<LikeUpdate> likeUpdate = new MutableLiveData<>();
+    private final MutableLiveData<BookmarkUpdate> bookmarkUpdate = new MutableLiveData<>();
 
     public MyTripViewModel() {
         this.postRepository = new PostRepository();
         this.userRepository = new UserRepository();
-        this.postsRef = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("posts");
         fetchCurrentUser();
     }
 
@@ -38,6 +36,14 @@ public class MyTripViewModel extends ViewModel {
 
     public LiveData<User> getUser() {
         return user;
+    }
+
+    public LiveData<LikeUpdate> getLikeUpdate() {
+        return likeUpdate;
+    }
+
+    public LiveData<BookmarkUpdate> getBookmarkUpdate() {
+        return bookmarkUpdate;
     }
 
     private void fetchCurrentUser() {
@@ -73,26 +79,14 @@ public class MyTripViewModel extends ViewModel {
     }
 
     public void toggleLike(String postId, String userId) {
-        postsRef.child(postId).child("likes").child(userId).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                if (task.getResult().exists()) {
-                    postsRef.child(postId).child("likes").child(userId).removeValue();
-                } else {
-                    postsRef.child(postId).child("likes").child(userId).setValue(true);
-                }
-            }
+        postRepository.toggleLike(postId, userId, (isSet, newCount) -> {
+            likeUpdate.postValue(new LikeUpdate(postId, isSet, newCount));
         });
     }
 
     public void toggleBookmark(String postId, String userId) {
-        postsRef.child(postId).child("bookmarks").child(userId).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                if (task.getResult().exists()) {
-                    postsRef.child(postId).child("bookmarks").child(userId).removeValue();
-                } else {
-                    postsRef.child(postId).child("bookmarks").child(userId).setValue(true);
-                }
-            }
+        postRepository.toggleBookmark(postId, userId, isSet -> {
+            bookmarkUpdate.postValue(new BookmarkUpdate(postId, isSet));
         });
     }
 
@@ -100,7 +94,7 @@ public class MyTripViewModel extends ViewModel {
         postRepository.deletePost(postId, new IPostRepository.OnDeletePostCompleteListener() {
             @Override
             public void onSuccess() {
-                fetchAllPosts();
+                fetchAllPosts(); // Full reload is fine for deletion
             }
 
             @Override
@@ -108,6 +102,28 @@ public class MyTripViewModel extends ViewModel {
                 // Handle error
             }
         });
+    }
+
+    public static class LikeUpdate {
+        public final String postId;
+        public final boolean isLiked;
+        public final int likeCount;
+
+        public LikeUpdate(String postId, boolean isLiked, int likeCount) {
+            this.postId = postId;
+            this.isLiked = isLiked;
+            this.likeCount = likeCount;
+        }
+    }
+
+    public static class BookmarkUpdate {
+        public final String postId;
+        public final boolean isBookmarked;
+
+        public BookmarkUpdate(String postId, boolean isBookmarked) {
+            this.postId = postId;
+            this.isBookmarked = isBookmarked;
+        }
     }
 
     public static class PostFetchState {
