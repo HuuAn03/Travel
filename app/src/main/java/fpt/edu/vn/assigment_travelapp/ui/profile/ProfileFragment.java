@@ -176,6 +176,9 @@ public class ProfileFragment extends Fragment {
                         case 2:
                             tab.setText("Bookmarks");
                             break;
+                        case 3:
+                            tab.setText("My Bookings");
+                            break;
                     }
                 }).attach();
     }

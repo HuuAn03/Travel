@@ -21,7 +21,7 @@ import fpt.edu.vn.assigment_travelapp.data.model.Booking;
 
 public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.BookingViewHolder> {
 
-    private final List<Booking> bookingList;
+    private List<Booking> bookingList;
     private OnBookingClickListener listener;
 
     public interface OnBookingClickListener {
@@ -34,6 +34,12 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.BookingV
 
     public BookingAdapter(List<Booking> bookingList) {
         this.bookingList = bookingList;
+    }
+
+    public void setBookings(List<Booking> bookings) {
+        this.bookingList.clear();
+        this.bookingList.addAll(bookings);
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -123,4 +129,3 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.BookingV
         }
     }
 }
-

@@ -10,8 +10,11 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
 
+import fpt.edu.vn.assigment_travelapp.data.model.Booking;
 import fpt.edu.vn.assigment_travelapp.data.model.Post;
 import fpt.edu.vn.assigment_travelapp.data.model.User;
+import fpt.edu.vn.assigment_travelapp.data.repository.BookingRepository;
+import fpt.edu.vn.assigment_travelapp.data.repository.IBookingRepository;
 import fpt.edu.vn.assigment_travelapp.data.repository.IPostRepository;
 import fpt.edu.vn.assigment_travelapp.data.repository.PostRepository;
 import fpt.edu.vn.assigment_travelapp.data.repository.UserRepository;
@@ -21,6 +24,7 @@ public class ProfileViewModel extends ViewModel {
     private final FirebaseAuth mAuth;
     private final UserRepository userRepository;
     private final IPostRepository postRepository;
+    private final BookingRepository bookingRepository;
 
     private FirebaseAuth.AuthStateListener authStateListener;
 
@@ -36,6 +40,11 @@ public class ProfileViewModel extends ViewModel {
     private final MutableLiveData<List<Post>> _bookmarkedPosts = new MutableLiveData<>();
     public LiveData<List<Post>> bookmarkedPosts = _bookmarkedPosts;
 
+    private final MutableLiveData<List<Booking>> _bookings = new MutableLiveData<>();
+    public LiveData<List<Booking>> getBookings() {
+        return _bookings;
+    }
+
     private final MutableLiveData<String> _error = new MutableLiveData<>();
     public LiveData<String> error = _error;
 
@@ -43,6 +52,7 @@ public class ProfileViewModel extends ViewModel {
         mAuth = FirebaseAuth.getInstance();
         userRepository = new UserRepository();
         postRepository = new PostRepository();
+        bookingRepository = new BookingRepository();
 
         authStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -70,6 +80,7 @@ public class ProfileViewModel extends ViewModel {
         loadUserPosts(firebaseUser.getUid());
         loadLikedPosts(firebaseUser.getUid());
         loadBookmarkedPosts(firebaseUser.getUid());
+        loadBookings(firebaseUser.getUid());
     }
 
     private void loadUserProfileData(FirebaseUser firebaseUser) {
@@ -126,6 +137,20 @@ public class ProfileViewModel extends ViewModel {
             @Override
             public void onSuccess(List<Post> posts) {
                 _bookmarkedPosts.setValue(posts);
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                _error.setValue(errorMessage);
+            }
+        });
+    }
+
+    public void loadBookings(String userId) {
+        bookingRepository.getUserBookings(userId, new IBookingRepository.OnBookingsFetchedListener() {
+            @Override
+            public void onSuccess(List<Booking> bookings) {
+                _bookings.setValue(bookings);
             }
 
             @Override

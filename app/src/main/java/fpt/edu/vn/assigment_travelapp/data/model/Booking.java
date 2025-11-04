@@ -1,6 +1,9 @@
 package fpt.edu.vn.assigment_travelapp.data.model;
 
-public class Booking {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Booking implements Parcelable {
     private String bookingId;
     private String userId;
     private String placeId;
@@ -42,6 +45,37 @@ public class Booking {
         this.guestPhone = guestPhone;
         this.guestEmail = guestEmail;
     }
+
+    protected Booking(Parcel in) {
+        bookingId = in.readString();
+        userId = in.readString();
+        placeId = in.readString();
+        placeName = in.readString();
+        placeAddress = in.readString();
+        placeImageUrl = in.readString();
+        checkInDate = in.readLong();
+        checkOutDate = in.readLong();
+        numberOfGuests = in.readInt();
+        totalPrice = in.readDouble();
+        status = in.readString();
+        createdAt = in.readLong();
+        paymentStatus = in.readString();
+        guestName = in.readString();
+        guestPhone = in.readString();
+        guestEmail = in.readString();
+    }
+
+    public static final Creator<Booking> CREATOR = new Creator<Booking>() {
+        @Override
+        public Booking createFromParcel(Parcel in) {
+            return new Booking(in);
+        }
+
+        @Override
+        public Booking[] newArray(int size) {
+            return new Booking[size];
+        }
+    };
 
     public String getBookingId() {
         return bookingId;
@@ -170,5 +204,29 @@ public class Booking {
     public void setGuestEmail(String guestEmail) {
         this.guestEmail = guestEmail;
     }
-}
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(bookingId);
+        dest.writeString(userId);
+        dest.writeString(placeId);
+        dest.writeString(placeName);
+        dest.writeString(placeAddress);
+        dest.writeString(placeImageUrl);
+        dest.writeLong(checkInDate);
+        dest.writeLong(checkOutDate);
+        dest.writeInt(numberOfGuests);
+        dest.writeDouble(totalPrice);
+        dest.writeString(status);
+        dest.writeLong(createdAt);
+        dest.writeString(paymentStatus);
+        dest.writeString(guestName);
+        dest.writeString(guestPhone);
+        dest.writeString(guestEmail);
+    }
+}

@@ -115,7 +115,21 @@
         android:id="@+id/navigation_favorite"
         android:name="fpt.edu.vn.assigment_travelapp.ui.favorite.FavoriteFragment"
         android:label="Favorite"
-        tools:layout="@layout/fragment_favorite" />
+        tools:layout="@layout/fragment_favorite" >
+        <action
+            android:id="@+id/action_favoriteFragment_to_bookingDetailFragment"
+            app:destination="@id/bookingDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/bookingDetailFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.booking.BookingDetailFragment"
+        android:label="Booking Detail"
+        tools:layout="@layout/fragment_booking_detail">
+        <argument
+            android:name="booking"
+            app:argType="fpt.edu.vn.assigment_travelapp.data.model.Booking" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_profile"
