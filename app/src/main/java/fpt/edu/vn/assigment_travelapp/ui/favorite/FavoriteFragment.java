@@ -6,6 +6,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import fpt.edu.vn.assigment_travelapp.databinding.FragmentFavoriteBinding;
@@ -20,6 +22,19 @@ public class FavoriteFragment extends Fragment {
         View root = binding.getRoot();
 
         return root;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getActivity() instanceof AppCompatActivity) {
+            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.show();
+                actionBar.setTitle("Favorite");
+                actionBar.setDisplayHomeAsUpEnabled(false);
+            }
+        }
     }
 
     @Override

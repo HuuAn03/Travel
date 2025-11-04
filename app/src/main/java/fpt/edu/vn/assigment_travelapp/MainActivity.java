@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
         BottomNavigationView navView = findViewById(R.id.nav_view);
         appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_home, R.id.navigation_my_trip, R.id.navigation_favorite, R.id.navigation_profile)
+                R.id.navigation_home, R.id.navigation_my_trip, R.id.navigation_explore, R.id.navigation_favorite, R.id.navigation_profile)
                 .build();
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                  if (currentUser != null) {
                     navController.navigate(R.id.navigation_home);
                  }
-            } else if (destination.getId() == R.id.signInFragment || destination.getId() == R.id.signUpFragment || destination.getId() == R.id.newPostFragment || destination.getId() == R.id.fullScreenMapFragment || destination.getId() == R.id.chooseLocationFragment) {
+            } else if (destination.getId() == R.id.signInFragment || destination.getId() == R.id.signUpFragment || destination.getId() == R.id.newPostFragment || destination.getId() == R.id.fullScreenMapFragment || destination.getId() == R.id.chooseLocationFragment || destination.getId() == R.id.notificationsFragment) {
                 navView.setVisibility(View.GONE);
                 if (getSupportActionBar() != null) {
                     getSupportActionBar().hide();
