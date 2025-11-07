@@ -122,6 +122,12 @@
     </fragment>
 
     <fragment
+        android:id="@+id/notificationsFragment"
+        android:name="fpt.edu.vn.assigment_travelapp.ui.notifications.NotificationsFragment"
+        android:label="@string/title_notifications"
+        tools:layout="@layout/fragment_notifications" />
+
+    <fragment
         android:id="@+id/bookingDetailFragment"
         android:name="fpt.edu.vn.assigment_travelapp.ui.booking.BookingDetailFragment"
         android:label="Booking Detail"

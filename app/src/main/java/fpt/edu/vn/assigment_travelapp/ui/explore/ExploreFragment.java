@@ -1,37 +1,64 @@
 package fpt.edu.vn.assigment_travelapp.ui.explore;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import android.text.Html;
-import android.view.*;
-import android.widget.*;
-import androidx.annotation.*;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import org.json.JSONObject;
-import java.io.*;
-import java.net.*;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import fpt.edu.vn.assigment_travelapp.R;
 
 public class ExploreFragment extends Fragment {
 
     private RecyclerView recyclerChat;
     private EditText inputPrompt;
-    private ImageButton btnSend;
+    private ImageButton btnSend, btnMic;
     private ChatAdapter adapter;
     private List<ChatMessage> messages;
     private static final String BACKEND_URL = "https://virtigo-api.onrender.com/api/Gemini/chat";
+    private static final int RECORD_AUDIO_PERMISSION_CODE = 101;
+
+    private final ActivityResultLauncher<Intent> speechRecognizerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    ArrayList<String> speechResult = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    if (speechResult != null && !speechResult.isEmpty()) {
+                        inputPrompt.setText(speechResult.get(0));
+                    }
+                }
+            });
 
     @Nullable
     @Override
@@ -43,6 +70,7 @@ public class ExploreFragment extends Fragment {
         recyclerChat = v.findViewById(R.id.recyclerChat);
         inputPrompt = v.findViewById(R.id.inputPrompt);
         btnSend = v.findViewById(R.id.btnSend);
+        btnMic = v.findViewById(R.id.btnMic);
 
         messages = new ArrayList<>();
         adapter = new ChatAdapter(getContext(), messages);
@@ -57,7 +85,39 @@ public class ExploreFragment extends Fragment {
             callGeminiAPI(prompt);
         });
 
+        btnMic.setOnClickListener(view -> {
+            if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                startSpeechToText();
+            } else {
+                requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO_PERMISSION_CODE);
+            }
+        });
+
         return v;
+    }
+
+    private void startSpeechToText() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN");
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Nói gì đó...");
+        try {
+            speechRecognizerLauncher.launch(intent);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == RECORD_AUDIO_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startSpeechToText();
+            } else {
+                Toast.makeText(getContext(), "Cần cấp quyền ghi âm để sử dụng tính năng này", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
@@ -72,7 +132,7 @@ public class ExploreFragment extends Fragment {
             }
         }
     }
-  
+
     private void addMessage(String message, boolean isUser) {
         messages.add(new ChatMessage(message, isUser));
         requireActivity().runOnUiThread(() -> {
@@ -81,7 +141,6 @@ public class ExploreFragment extends Fragment {
         });
     }
 
-    // 👇 Hàm gọi API có hiệu ứng "..." và xử lý Markdown
     private void callGeminiAPI(String prompt) {
         ChatMessage loadingMessage = new ChatMessage("🤖 ...", false);
         addMessage(loadingMessage.getMessage(), loadingMessage.isUser());
@@ -116,7 +175,6 @@ public class ExploreFragment extends Fragment {
                 JSONObject jsonResponse = new JSONObject(sb.toString());
                 String reply = jsonResponse.optString("reply", "Không nhận được phản hồi từ AI.");
 
-                // ✨ Chuyển Markdown -> HTML
                 String htmlReply = markdownToHtml("🤖 " + reply);
 
                 requireActivity().runOnUiThread(() -> {
@@ -135,17 +193,13 @@ public class ExploreFragment extends Fragment {
         }).start();
     }
 
-    // 👇 Chuyển Markdown cơ bản sang HTML
     private String markdownToHtml(String text) {
-        // Thay **bold**
         String html = text.replaceAll("\\*\\*(.*?)\\*\\*", "<b>$1</b>");
-        // Thay *italic*
         html = html.replaceAll("\\*(.*?)\\*", "<i>$1</i>");
-        // Xuống dòng
         html = html.replace("\n", "<br>");
         return html;
     }
-  
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();

@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +28,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -148,6 +151,15 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        FirebaseUser fUser = mAuth.getCurrentUser();
+        String currentUserId = (fUser != null) ? fUser.getUid() : null;
+        boolean isViewingOwnProfile = (userId == null || userId.isEmpty() || userId.equals(currentUserId));
+        setupActionBar(isViewingOwnProfile);
+    }
+
     private void setupActionBar(boolean isOwnProfile) {
         if (getActivity() instanceof AppCompatActivity) {
             ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
@@ -165,7 +177,8 @@ public class ProfileFragment extends Fragment {
 
         new TabLayoutMediator(binding.tabLayout, binding.viewPager,
                 (tab, position) -> {
-                    boolean isViewingOwnProfile = (userId != null && userId.equals(mAuth.getCurrentUser().getUid()));
+                    FirebaseUser fUser = mAuth.getCurrentUser();
+                    boolean isViewingOwnProfile = (fUser != null && userId != null && userId.equals(fUser.getUid()));
                     switch (position) {
                         case 0:
                             tab.setText(isViewingOwnProfile ? "My Posts" : "Posts");
@@ -388,13 +401,27 @@ public class ProfileFragment extends Fragment {
     }
 
     @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.profile_menu, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_logout) {
+            mAuth.signOut();
+            mGoogleSignInClient.signOut().addOnCompleteListener(requireActivity(), task -> {
+                NavHostFragment.findNavController(ProfileFragment.this).navigate(R.id.signInFragment);
+            });
+            return true;
+        } else if (itemId == android.R.id.home) {
             if (getParentFragmentManager().getBackStackEntryCount() > 0) {
                 getParentFragmentManager().popBackStack();
             }
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
