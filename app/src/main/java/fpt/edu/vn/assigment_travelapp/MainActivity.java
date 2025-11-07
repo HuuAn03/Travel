@@ -111,13 +111,21 @@ public class MainActivity extends AppCompatActivity {
             // Handle menu visibility
             if (optionsMenu != null) {
                 MenuItem logoutItem = optionsMenu.findItem(R.id.action_logout);
+                MenuItem clearChatItem = optionsMenu.findItem(R.id.action_clear_chat);
                 if (logoutItem != null) {
                     logoutItem.setVisible(destination.getId() == R.id.navigation_profile);
+                }
+                 if (clearChatItem != null) {
+                    clearChatItem.setVisible(destination.getId() == R.id.navigation_explore);
                 }
             }
 
             // Handle splash screen
             if (destination.getId() == R.id.splashFragment) {
+                 navView.setVisibility(View.GONE);
+                 if (getSupportActionBar() != null) {
+                    getSupportActionBar().hide();
+                 }
                  FirebaseUser currentUser = mAuth.getCurrentUser();
                  if (currentUser != null) {
                     navController.navigate(R.id.navigation_home);

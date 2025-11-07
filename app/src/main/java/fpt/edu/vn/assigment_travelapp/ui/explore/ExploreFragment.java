@@ -7,10 +7,14 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.text.Html;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -35,7 +39,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import fpt.edu.vn.assigment_travelapp.R;
 
@@ -46,6 +49,8 @@ public class ExploreFragment extends Fragment {
     private ImageButton btnSend, btnMic;
     private ChatAdapter adapter;
     private List<ChatMessage> messages;
+    private LinearLayout suggestionLayout;
+    private ChatHistoryDbHelper dbHelper;
     private static final String BACKEND_URL = "https://virtigo-api.onrender.com/api/Gemini/chat";
     private static final int RECORD_AUDIO_PERMISSION_CODE = 101;
 
@@ -60,6 +65,12 @@ public class ExploreFragment extends Fragment {
                 }
             });
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -71,8 +82,10 @@ public class ExploreFragment extends Fragment {
         inputPrompt = v.findViewById(R.id.inputPrompt);
         btnSend = v.findViewById(R.id.btnSend);
         btnMic = v.findViewById(R.id.btnMic);
+        suggestionLayout = v.findViewById(R.id.suggestionLayout);
 
-        messages = new ArrayList<>();
+        dbHelper = new ChatHistoryDbHelper(getContext());
+        messages = dbHelper.getAllMessages();
         adapter = new ChatAdapter(getContext(), messages);
         recyclerChat.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerChat.setAdapter(adapter);
@@ -80,7 +93,7 @@ public class ExploreFragment extends Fragment {
         btnSend.setOnClickListener(view -> {
             String prompt = inputPrompt.getText().toString().trim();
             if (prompt.isEmpty()) return;
-            addMessage(prompt, true);
+            addMessage(new ChatMessage(prompt, true), true);
             inputPrompt.setText("");
             callGeminiAPI(prompt);
         });
@@ -94,6 +107,22 @@ public class ExploreFragment extends Fragment {
         });
 
         return v;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        updateSuggestionVisibility();
+    }
+
+    private void updateSuggestionVisibility() {
+        if (messages.isEmpty()) {
+            suggestionLayout.setVisibility(View.VISIBLE);
+            recyclerChat.setVisibility(View.GONE);
+        } else {
+            suggestionLayout.setVisibility(View.GONE);
+            recyclerChat.setVisibility(View.VISIBLE);
+        }
     }
 
     private void startSpeechToText() {
@@ -133,17 +162,42 @@ public class ExploreFragment extends Fragment {
         }
     }
 
-    private void addMessage(String message, boolean isUser) {
-        messages.add(new ChatMessage(message, isUser));
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        MenuItem clearChatItem = menu.findItem(R.id.action_clear_chat);
+        if (clearChatItem != null) {
+            clearChatItem.setVisible(true);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_clear_chat) {
+            dbHelper.clearHistory();
+            messages.clear();
+            adapter.notifyDataSetChanged();
+            updateSuggestionVisibility();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void addMessage(ChatMessage message, boolean saveToDb) {
+        if (saveToDb) {
+            dbHelper.addMessage(message);
+        }
+        messages.add(message);
         requireActivity().runOnUiThread(() -> {
             adapter.notifyItemInserted(messages.size() - 1);
             recyclerChat.scrollToPosition(messages.size() - 1);
+            updateSuggestionVisibility();
         });
     }
 
     private void callGeminiAPI(String prompt) {
         ChatMessage loadingMessage = new ChatMessage("🤖 ...", false);
-        addMessage(loadingMessage.getMessage(), loadingMessage.isUser());
+        addMessage(loadingMessage, false);
         int loadingIndex = messages.size() - 1;
 
         new Thread(() -> {
@@ -176,9 +230,11 @@ public class ExploreFragment extends Fragment {
                 String reply = jsonResponse.optString("reply", "Không nhận được phản hồi từ AI.");
 
                 String htmlReply = markdownToHtml("🤖 " + reply);
+                ChatMessage replyMessage = new ChatMessage(htmlReply, false);
 
                 requireActivity().runOnUiThread(() -> {
-                    messages.set(loadingIndex, new ChatMessage(htmlReply, false));
+                    messages.set(loadingIndex, replyMessage);
+                    dbHelper.addMessage(replyMessage); 
                     adapter.notifyItemChanged(loadingIndex);
                     recyclerChat.scrollToPosition(messages.size() - 1);
                 });
@@ -186,7 +242,9 @@ public class ExploreFragment extends Fragment {
             } catch (Exception e) {
                 e.printStackTrace();
                 requireActivity().runOnUiThread(() -> {
-                    messages.set(loadingIndex, new ChatMessage("⚠️ Lỗi: " + e.getMessage(), false));
+                    ChatMessage errorMessage = new ChatMessage("⚠️ Lỗi: " + e.getMessage(), false);
+                    messages.set(loadingIndex, errorMessage);
+                    dbHelper.addMessage(errorMessage); 
                     adapter.notifyItemChanged(loadingIndex);
                 });
             }

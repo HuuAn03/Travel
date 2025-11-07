@@ -20,12 +20,21 @@ import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import fpt.edu.vn.assigment_travelapp.R;
 import fpt.edu.vn.assigment_travelapp.adapter.PlaceAdapter;
 import fpt.edu.vn.assigment_travelapp.data.model.Place;
+import fpt.edu.vn.assigment_travelapp.data.model.User;
 import fpt.edu.vn.assigment_travelapp.databinding.FragmentSearchLocationBinding;
 
 public class SearchLocationFragment extends Fragment {
@@ -34,12 +43,14 @@ public class SearchLocationFragment extends Fragment {
     private SearchLocationViewModel viewModel;
     private PlaceAdapter placeAdapter;
     private List<Place> placeList = new ArrayList<>();
+    private FirebaseAuth mAuth;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = FragmentSearchLocationBinding.inflate(inflater, container, false);
         viewModel = new ViewModelProvider(this).get(SearchLocationViewModel.class);
+        mAuth = FirebaseAuth.getInstance();
         return binding.getRoot();
     }
 
@@ -49,25 +60,43 @@ public class SearchLocationFragment extends Fragment {
 
         setupRecyclerView();
         setupSearch();
+        checkUserRole();
         setupManagePlacesButton();
         observeViewModel();
 
         viewModel.getAllPlaces();
     }
 
+    private void checkUserRole() {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            String userId = currentUser.getUid();
+            DatabaseReference userRef = FirebaseDatabase.getInstance("https://swp391-fkoi-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("users").child(userId);
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    User user = snapshot.getValue(User.class);
+                    if (user != null && "admin".equals(user.getRole())) {
+                        binding.btnManagePlaces.setVisibility(View.VISIBLE);
+                    } else {
+                        binding.btnManagePlaces.setVisibility(View.GONE);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    binding.btnManagePlaces.setVisibility(View.GONE);
+                }
+            });
+        } else {
+            binding.btnManagePlaces.setVisibility(View.GONE);
+        }
+    }
+
     private void setupManagePlacesButton() {
         binding.btnManagePlaces.setOnClickListener(v -> {
             NavHostFragment.findNavController(this)
                     .navigate(R.id.action_searchLocationFragment_to_managePlacesFragment);
-        });
-        
-        binding.btnHome.setOnClickListener(v -> {
-            NavController navController = NavHostFragment.findNavController(this);
-            // Clear back stack up to and including navigation_home, then navigate to home
-            NavOptions navOptions = new NavOptions.Builder()
-                    .setPopUpTo(R.id.navigation_home, true)
-                    .build();
-            navController.navigate(R.id.navigation_home, null, navOptions);
         });
     }
 
@@ -85,7 +114,7 @@ public class SearchLocationFragment extends Fragment {
 
     private void setupSearch() {
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_SEARCH || 
+            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
                 (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
                 performSearch();
                 return true;
@@ -159,4 +188,3 @@ public class SearchLocationFragment extends Fragment {
         binding = null;
     }
 }
-
